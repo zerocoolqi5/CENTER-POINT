@@ -420,7 +420,7 @@ namespace CenterPoint
         TextBox repairResult, repMgrResult, repFlResult, repFlPartition, repUnlockResult, repMgrModel;
         string repMgrPath = "", repFlPath = "";
         System.Windows.Forms.Timer monTimer; Button monBtn; Label monStatus; bool monOn; string monLast = "";
-        System.Windows.Forms.Timer perfTimer; string baseTitle = "CENTER POINT TRANSFER V8 PRO - سنتر بوينت";
+        System.Windows.Forms.Timer perfTimer; string baseTitle = "CENTER POINT TRANSFER V12.0.0 PRO - سنتر بوينت";
 
         // عناصر قسم فحص USB
         Button usbScanBtn, usbToolsBtn, usbSaveBtn;
@@ -526,7 +526,7 @@ namespace CenterPoint
 
         public MainForm()
         {
-            Text = "CENTER POINT TRANSFER V8 PRO - سنتر بوينت";
+            Text = "CENTER POINT TRANSFER V12.0.0 PRO - سنتر بوينت";
             RightToLeft = RightToLeft.Yes;
             RightToLeftLayout = false;
             ClientSize = new Size(1040, 710);
@@ -3695,7 +3695,7 @@ namespace CenterPoint
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
                 try
                 {
-                    File.WriteAllText(dlg.FileName, "CENTER POINT TRANSFER V7.2 PRO\r\n" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n\r\n" + content, new UTF8Encoding(true));
+                    File.WriteAllText(dlg.FileName, "CENTER POINT TRANSFER V12.0.0 PRO\r\n" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n\r\n" + content, new UTF8Encoding(true));
                     LogOp("تم حفظ تقرير تشخيص USB");
                     MessageBox.Show("تم حفظ التقرير بنجاح.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -4601,9 +4601,26 @@ namespace CenterPoint
 
         string MtpWaitFile(string dir, string name, int seconds)
         {
-            for (int i = 0; i < seconds * 2; i++)
+            // لا يُعتبر الملف جاهزاً بمجرد ظهوره — ننتظر ثبات الحجم في 3 قراءات متتالية
+            string path = Path.Combine(dir, name);
+            long lastSize = -1;
+            int stableReads = 0;
+            int maxReads = Math.Max(2, seconds * 2);
+            for (int i = 0; i < maxReads; i++)
             {
-                try { var p = Path.Combine(dir, name); if (File.Exists(p)) return p; } catch { }
+                try
+                {
+                    var info = new FileInfo(path);
+                    if (info.Exists)
+                    {
+                        long size = info.Length;
+                        if (size == lastSize) stableReads++;
+                        else { lastSize = size; stableReads = 0; }
+                        if (stableReads >= 3) return path;
+                    }
+                    else { lastSize = -1; stableReads = 0; }
+                }
+                catch { lastSize = -1; stableReads = 0; }
                 System.Threading.Thread.Sleep(500);
             }
             return null;

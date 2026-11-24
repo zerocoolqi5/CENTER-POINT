@@ -144,7 +144,18 @@ namespace CenterPoint
                 }
                 else
                 {
-                    try { ns.CopyHere(it, 0x214); MtpWaitFile(localDir, nm, 300); } catch { }
+                    try
+                    {
+                        ns.CopyHere(it, 0x214);
+                        string copied = MtpWaitFile(localDir, nm, 300);
+                        if (copied == null)
+                            throw new IOException("MTP copy did not reach a stable file size: " + nm);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError("MTP read", nm + " | " + ex.Message);
+                        throw;
+                    }
                 }
             }
         }
@@ -184,6 +195,18 @@ namespace CenterPoint
                             if (destFolder == null) { onFile(name, false, sz); continue; }
                             try
                             {
+                                bool nameExists = false;
+                                foreach (dynamic existing in destFolder.Items())
+                                {
+                                    try { if ((string)existing.Name == name) { nameExists = true; break; } }
+                                    catch { }
+                                }
+                                if (nameExists)
+                                {
+                                    LogError("MTP write", name + " | destination name already exists; skipped to prevent false success/overwrite.");
+                                    onFile(name, false, sz);
+                                    continue;
+                                }
                                 dynamic localNs = sh.NameSpace(Path.GetDirectoryName(f));
                                 dynamic localItem = localNs.ParseName(name);
                                 if (localItem == null) { onFile(name, false, sz); continue; }
