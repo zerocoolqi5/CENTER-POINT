@@ -26,16 +26,57 @@ namespace CenterPoint
             catch { return "0.0.0"; }
         }
 
-        // فحص عند بدء التشغيل (صامت: لا يزعج لو ما فيه تحديث أو لا إنترنت)
+        // ===== إعداد التحديث التلقائي (مفعّل افتراضياً) =====
+        bool _autoUpdateLoaded = false, _autoUpdate = true;
+        string AutoUpdatePath { get { return System.IO.Path.Combine(ExportsDir, "app_settings.json"); } }
+
+        bool AutoUpdateEnabled
+        {
+            get { if (!_autoUpdateLoaded) LoadAutoUpdate(); return _autoUpdate; }
+            set { _autoUpdate = value; _autoUpdateLoaded = true; SaveAutoUpdate(); }
+        }
+
+        void LoadAutoUpdate()
+        {
+            _autoUpdateLoaded = true;
+            try
+            {
+                if (System.IO.File.Exists(AutoUpdatePath))
+                    using (var doc = JsonDocument.Parse(System.IO.File.ReadAllText(AutoUpdatePath)))
+                        if (doc.RootElement.TryGetProperty("autoUpdate", out var v)) _autoUpdate = v.GetBoolean();
+            }
+            catch { }
+        }
+
+        void SaveAutoUpdate()
+        {
+            try { System.IO.File.WriteAllText(AutoUpdatePath, "{\"autoUpdate\":" + (_autoUpdate ? "true" : "false") + "}", new System.Text.UTF8Encoding(false)); }
+            catch { }
+        }
+
+        // فحص عند بدء التشغيل (صامت) — مُفعّل افتراضياً، ويؤجَّل أثناء أي عملية جارية
         async void CheckUpdateStartup()
         {
+            if (!AutoUpdateEnabled) return;
             try { await Task.Delay(3000); } catch { }
+            // تأجيل الفحص إذا فيه عملية نقل/صيانة جارية — لا نقاطعها
+            int waited = 0;
+            while (opBusy && waited < 1800) { try { await Task.Delay(5000); } catch { } waited += 5; }
+            if (opBusy) return; // عملية طويلة — لا نزعج؛ يبقى الفحص اليدوي متاحاً
             CheckUpdate(true);
         }
 
         // silent=true: يعرض فقط عند توفّر تحديث. false: يعرض النتيجة دائماً (زر الإعدادات).
         async void CheckUpdate(bool silent)
         {
+            // لا نبدأ فحص/تثبيت تحديث أثناء عملية نقل أو صيانة جارية
+            if (opBusy)
+            {
+                if (!silent)
+                    MessageBox.Show("هناك عملية جارية (نقل/صيانة). سيتم فحص التحديثات بعد انتهائها حفاظاً على العملية.",
+                        "التحديثات", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             string cur = CurrentVersion();
             try
             {

@@ -23,24 +23,34 @@ namespace CenterPoint
 
             StLbl("العرض واللغة", 54);
             StBtn("🌐 تبديل اللغة (عربي / English)", 20, 84, 335, BLUE, () => ToggleLang());
-            StBtn("🔄 فحص التحديثات", 363, 84, 332, Color.FromArgb(35, 115, 75), () => CheckUpdate(false));
+            StBtn("🔄 فحص التحديثات الآن", 363, 84, 332, Color.FromArgb(35, 115, 75), () => CheckUpdate(false));
 
-            StLbl("الملفات والسجلات", 134);
-            StBtn("📁 فتح مجلد exports", 20, 164, 335, CARD, () => StOpen(ExportsDir));
-            StBtn("📄 سجل العمليات", 363, 164, 332, CARD, () => StOpenFile(Path.Combine(ExportsDir, "operations.log")));
-            StBtn("⚠ سجل الأخطاء", 20, 206, 335, CARD, () => StOpenFile(Path.Combine(ExportsDir, "errors.log")));
-            StBtn("🗒 السجل المركزي (center.log)", 363, 206, 332, CARD, () => StOpenFile(Path.Combine(ExportsDir, "center.log")));
+            StLbl("التحديثات", 128);
+            var chkAuto = new CheckBox
+            {
+                Text = "التحديث التلقائي عند بدء التشغيل (لا يبدأ أثناء عملية نقل/صيانة جارية)",
+                Location = new Point(20, 158), Size = new Size(675, 26), ForeColor = Color.White, BackColor = BG,
+                Checked = AutoUpdateEnabled, RightToLeft = RightToLeft.Yes, Font = new Font("Arial", 9, FontStyle.Bold)
+            };
+            chkAuto.CheckedChanged += (s, e) => { AutoUpdateEnabled = chkAuto.Checked; };
+            pageSettings.Controls.Add(chkAuto);
 
-            StLbl("الشبكة", 256);
+            StLbl("الملفات والسجلات", 196);
+            StBtn("📁 فتح مجلد exports", 20, 226, 335, CARD, () => StOpen(ExportsDir));
+            StBtn("📄 سجل العمليات", 363, 226, 332, CARD, () => StOpenFile(Path.Combine(ExportsDir, "operations.log")));
+            StBtn("⚠ سجل الأخطاء", 20, 268, 335, CARD, () => StOpenFile(Path.Combine(ExportsDir, "errors.log")));
+            StBtn("🗒 السجل المركزي (center.log)", 363, 268, 332, CARD, () => StOpenFile(Path.Combine(ExportsDir, "center.log")));
+
+            StLbl("الشبكة", 316);
             var net = new Label
             {
-                Text = "البرنامج يعمل بدون إنترنت. أزرار «التنزيل» و«البحث عن الروم» تحتاج اتصالاً لفتح المتصفح فقط. لا تُرسل أي بيانات خارج الجهاز.",
-                ForeColor = Color.FromArgb(200, 215, 240), BackColor = Color.FromArgb(16, 24, 44), Location = new Point(20, 286), Size = new Size(675, 46),
+                Text = "البرنامج يعمل بدون إنترنت. أزرار «التنزيل» و«البحث عن الروم» و«فحص التحديثات» تحتاج اتصالاً فقط. لا تُرسل أي بيانات خارج الجهاز.",
+                ForeColor = Color.FromArgb(200, 215, 240), BackColor = Color.FromArgb(16, 24, 44), Location = new Point(20, 346), Size = new Size(675, 42),
                 TextAlign = ContentAlignment.MiddleRight, Font = new Font("Arial", 9), Padding = new Padding(10, 0, 10, 0)
             };
             pageSettings.Controls.Add(net);
 
-            StLbl("عن البرنامج", 348);
+            StLbl("عن البرنامج", 400);
             var about = new Label
             {
                 Text = "CENTER POINT PROFESSIONAL — V12.0.0\r\n" +
@@ -49,7 +59,7 @@ namespace CenterPoint
                        "واتساب / هاتف:  0782 915 5923\r\n" +
                        "فيسبوك:  facebook.com/centerpoint\r\n\r\n" +
                        "⛔ البرنامج أدوات تشخيص وإرشاد وإدارة — لا يتجاوز أقفال الحسابات (FRP / iCloud).",
-                ForeColor = Color.FromArgb(205, 220, 245), BackColor = Color.FromArgb(10, 16, 32), Location = new Point(20, 378), Size = new Size(675, 240),
+                ForeColor = Color.FromArgb(205, 220, 245), BackColor = Color.FromArgb(10, 16, 32), Location = new Point(20, 430), Size = new Size(675, 212),
                 TextAlign = ContentAlignment.TopRight, Font = new Font("Consolas", 11), Padding = new Padding(14, 12, 14, 12)
             };
             pageSettings.Controls.Add(about);
