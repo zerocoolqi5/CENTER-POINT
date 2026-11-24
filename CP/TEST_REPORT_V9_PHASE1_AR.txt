@@ -1,0 +1,21 @@
+CENTER POINT V9 — تقرير الاختبارات التمهيدية
+التاريخ: 2026-11-25
+
+الاختبارات المنفذة:
+[PASS] وجود ملفات المصدر الأساسية (16 ملفاً مطلوباً).
+[PASS] قراءة ملف CenterPoint.csproj كـ XML صالح.
+[PASS] تحديث Version / AssemblyVersion / FileVersion إلى 9.0.0.
+[PASS] تحديث إصدار Inno Setup إلى 9.0.0.
+[PASS] فحص آلية اختيار جهاز ADB: عمليات إعادة التشغيل والتثبيت والإزالة وShell ترفض تعدد الأجهزة بدلاً من اختيار أول جهاز.
+[PASS] اقتباس Serial ID واسم الحزمة في أوامر ADB، والتحقق من صيغة اسم الحزمة.
+[PASS] فحص صياغة JavaScript المضمن في صفحات HTML: 2 script blocks.
+
+لم تُنفذ / لا يمكن ادعاء نجاحها:
+[NOT RUN] dotnet build / dotnet publish — لا تتوفر أداة dotnet في بيئة التنفيذ الحالية.
+[NOT RUN] Inno Setup compile — يتطلب Windows وInno Setup Compiler.
+[NOT RUN] اختبار MTP/ADB على هاتف حقيقي.
+[NOT RUN] اختبار iPhone/AFC على جهاز حقيقي.
+[NOT RUN] اختبار Firmware/Recovery على أجهزة اختبار.
+
+النتيجة:
+نجحت الفحوصات الساكنة التمهيدية فقط. الحزمة ليست بعد إصداراً نهائياً مختبراً على Windows أو أجهزة فعلية. يجب تشغيل tests/verify_release.py ثم بناء Windows وإجراء اختبارات الأجهزة قبل اعتماد الإصدار النهائي.

@@ -1,0 +1,37 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Static release checks
+        run: python CP/tests/verify_release.py
+
+      - name: Restore
+        run: dotnet restore CP/CenterPoint.csproj
+
+      - name: Build
+        run: dotnet build CP/CenterPoint.csproj --configuration Release --no-restore

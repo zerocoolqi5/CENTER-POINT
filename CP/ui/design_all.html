@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Center Point Transfer V8 — تصميم كافة الأقسام</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --card:rgba(26,38,70,.55); --stroke:rgba(80,130,220,.35);
+    --txt:#eaf1ff; --muted:#9fb3d6; --blue:#2f8bff; --green:#2ee06a;
+    --panel:rgba(16,26,54,.6);
+  }
+  html,body{height:100%}
+  body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;color:var(--txt);
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(40,110,230,.28), transparent 60%),
+      radial-gradient(900px 500px at 5% 110%, rgba(120,40,200,.18), transparent 60%),
+      linear-gradient(135deg,#060a14,#0a1026 55%,#081024);
+    min-height:100%}
+  .app{max-width:1200px;margin:0 auto;padding:14px}
+
+  /* brand */
+  .brand{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-radius:18px;margin-bottom:14px;
+    background:linear-gradient(120deg,rgba(14,50,110,.85),rgba(30,110,200,.5));border:1px solid var(--stroke);
+    box-shadow:0 10px 34px rgba(20,90,200,.3),inset 0 1px 0 rgba(255,255,255,.08)}
+  .brand .l{display:flex;align-items:center;gap:14px}
+  .logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#0b1b3a,#13204a);
+    border:1px solid rgba(90,150,255,.5);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(50,130,255,.4)}
+  .brand h1{font-size:22px;font-weight:900;letter-spacing:.5px}
+  .brand h1 b{color:#2f8bff}
+  .brand .v{background:linear-gradient(135deg,#2f8bff,#1456c4);padding:3px 10px;border-radius:8px;font-size:14px;font-weight:800;margin-right:6px}
+  .brand .sub{font-size:13px;color:#bcd4ff;margin-top:2px}
+  .badge{background:linear-gradient(135deg,#f6c23e,#d99a10);color:#3a2a00;font-weight:900;font-size:12px;
+    padding:8px 14px;border-radius:30px;box-shadow:0 6px 18px rgba(230,180,30,.4);text-align:center;line-height:1.3}
+
+  .shell{display:grid;grid-template-columns:230px 1fr;gap:14px}
+
+  /* sidebar */
+  .side{border-radius:18px;padding:12px;background:linear-gradient(180deg,rgba(12,22,50,.8),rgba(8,14,34,.8));
+    border:1px solid var(--stroke);box-shadow:0 10px 30px rgba(0,0,0,.4);height:fit-content;position:sticky;top:14px}
+  .nav{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:700;
+    color:#cfe0ff;margin-bottom:5px;transition:.15s;border:1px solid transparent}
+  .nav .ic{font-size:18px;width:22px;text-align:center}
+  .nav:hover{background:rgba(40,80,160,.25)}
+  .nav.on{background:linear-gradient(135deg,#2f8bff,#1557c7);color:#fff;box-shadow:0 8px 20px rgba(30,100,230,.4);border-color:rgba(120,170,255,.4)}
+
+  /* content */
+  .main{min-height:600px}
+  .sec{display:none;animation:fade .25s ease} .sec.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-radius:16px;margin-bottom:14px;
+    background:linear-gradient(120deg,rgba(20,70,130,.75),rgba(35,120,200,.5));border:1px solid var(--stroke);
+    box-shadow:0 8px 30px rgba(20,90,200,.22),inset 0 1px 0 rgba(255,255,255,.08)}
+  .hdr .t{font-size:18px;font-weight:800;display:flex;align-items:center;gap:10px}
+  .hdr .t .dot{width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+  .btn{border:none;cursor:pointer;color:#fff;font-weight:700;font-family:inherit;border-radius:10px;padding:10px 16px;font-size:13px;
+    background:linear-gradient(135deg,#2f8bff,#1760d6);box-shadow:0 6px 18px rgba(30,100,230,.4);transition:.15s}
+  .btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+  .btn.g{background:linear-gradient(135deg,#22c35e,#149048)} .btn.r{background:linear-gradient(135deg,#e5484d,#b5262b)}
+  .btn.ghost{background:rgba(40,60,110,.5);border:1px solid var(--stroke);box-shadow:none}
+  .btn.lg{padding:14px 22px;font-size:15px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .card{border-radius:16px;padding:16px;background:var(--card);border:1px solid var(--stroke);
+    box-shadow:0 8px 26px rgba(10,20,50,.4),inset 0 1px 0 rgba(255,255,255,.05)}
+  .card h3{font-size:14px;color:#bcd6ff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+  /* device cards */
+  .dev{border-radius:18px;padding:16px;background:linear-gradient(160deg,rgba(30,44,80,.7),rgba(14,22,46,.7));
+    border:1px solid var(--stroke);box-shadow:0 10px 30px rgba(10,20,50,.45)}
+  .dev .top{display:flex;align-items:center;gap:12px}
+  .dev .ic{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;
+    background:linear-gradient(135deg,rgba(60,140,255,.25),rgba(60,140,255,.05));border:1px solid rgba(90,150,255,.3)}
+  .dev .model{font-size:16px;font-weight:800} .dev .os{font-size:12px;color:var(--muted);margin-top:2px}
+  .rowb{margin-top:14px} .rowb .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+  .rowb .lab b{color:#fff}
+  .bar{height:11px;border-radius:7px;background:rgba(255,255,255,.08);overflow:hidden} .bar i{display:block;height:100%;border-radius:7px}
+  .bar i.g{background:linear-gradient(90deg,#1f9c4d,#3fe06b)} .bar i.b{background:linear-gradient(90deg,#1f6feb,#51a6ff)}
+
+  /* feature list (right of mockup) */
+  .feat{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;margin-bottom:10px;
+    background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1)}
+  .feat .fi{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 42px;
+    background:rgba(30,70,150,.4);border:1px solid rgba(90,150,255,.3)}
+  .feat .fx{flex:1} .feat .fx b{font-size:14px} .feat .fx span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .feat .ok{color:var(--green);font-size:20px}
+
+  /* tiles */
+  .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px}
+  .tile{cursor:pointer;border-radius:16px;padding:16px 8px;text-align:center;color:#fff;border:1px solid rgba(255,255,255,.12);transition:.15s;
+    box-shadow:0 8px 24px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12)}
+  .tile:hover{transform:translateY(-3px);filter:brightness(1.1)} .tile .i{font-size:24px} .tile .l{margin-top:8px;font-size:13px;font-weight:800}
+  .t1{background:linear-gradient(135deg,#8140e0,#5a23a6)} .t2{background:linear-gradient(135deg,#1fb85f,#117a43)}
+  .t3{background:linear-gradient(135deg,#2f8bff,#1456c4)} .t4{background:linear-gradient(135deg,#f0912e,#c25e14)}
+  .t5{background:linear-gradient(135deg,#f0387f,#b41e63)}
+
+  /* phones bridge */
+  .bridge{display:flex;align-items:center;justify-content:center;gap:24px;padding:24px;border-radius:18px;margin-bottom:14px;
+    background:linear-gradient(160deg,rgba(20,40,80,.6),rgba(12,20,44,.7));border:1px solid var(--stroke)}
+  .pscr{width:120px;height:184px;border-radius:20px;border:3px solid rgba(90,150,255,.5);position:relative;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:40px}
+  .pscr.a{background:linear-gradient(160deg,#143a2a,#0f2a1e)} .pscr.i{background:linear-gradient(160deg,#241a40,#140f24)}
+  .pscr .tg{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:800;
+    background:linear-gradient(135deg,#22c35e,#149048);white-space:nowrap}
+  .arrow{font-size:40px;color:var(--green);filter:drop-shadow(0 0 10px rgba(50,220,110,.6))}
+
+  /* progress */
+  .prog{border-radius:14px;padding:16px;background:var(--card);border:1px solid var(--stroke);margin-top:14px}
+  .prog .st{display:flex;justify-content:space-between;font-size:13px;color:#bcd6ff;margin-bottom:8px}
+  .track{height:20px;border-radius:7px;background:rgba(255,255,255,.08);overflow:hidden}
+  .track i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#1f9c4d,#3fe06b);box-shadow:0 0 12px rgba(50,210,100,.6)}
+  .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
+  .stat{border-radius:14px;padding:12px;text-align:center;background:var(--card);border:1px solid var(--stroke)}
+  .stat .k{font-size:12px;color:var(--muted)} .stat .v{font-size:18px;font-weight:800;margin-top:4px}
+
+  /* checklist */
+  .ci{display:flex;align-items:center;justify-content:space-between;padding:11px 4px;cursor:pointer;border-bottom:1px solid rgba(90,150,255,.12)}
+  .ci:last-child{border-bottom:none} .ci .n{display:flex;align-items:center;gap:10px;font-size:14px} .ci .n .ei{font-size:18px}
+  .ck{width:22px;height:22px;border-radius:6px;border:2px solid var(--stroke);display:flex;align-items:center;justify-content:center;font-size:13px}
+  .ci.on .ck{background:linear-gradient(135deg,#22c35e,#149048);border-color:#22c35e}
+
+  /* mode banner */
+  .mode{margin:12px 0;padding:11px 14px;border-radius:12px;background:rgba(47,139,255,.1);border:1px solid rgba(90,150,255,.3);font-size:13px;line-height:1.9}
+
+  /* file manager */
+  .pathbar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(10,18,40,.7);border:1px solid var(--stroke);font-size:13px;color:#bcd6ff;margin-bottom:12px}
+  .flist{border-radius:12px;overflow:hidden;border:1px solid var(--stroke)}
+  .frow{display:flex;align-items:center;gap:12px;padding:12px 14px;font-size:13px;border-bottom:1px solid rgba(90,150,255,.1);background:rgba(16,26,54,.4)}
+  .frow:hover{background:rgba(40,80,160,.2)} .frow:last-child{border-bottom:none}
+  .frow .fi{font-size:20px;width:26px;text-align:center} .frow .fn{flex:1} .frow .fsz{color:var(--muted);font-size:12px}
+
+  /* apps / contacts rows */
+  .arow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(16,26,54,.45);border:1px solid rgba(90,150,255,.14);margin-bottom:8px;font-size:13px}
+  .arow .ai{width:40px;height:40px;border-radius:10px;background:rgba(30,70,150,.4);display:flex;align-items:center;justify-content:center;font-size:20px}
+  .arow .an{flex:1} .arow .an b{font-size:14px} .arow .an span{display:block;font-size:12px;color:var(--muted)}
+
+  /* gallery */
+  .gal{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .gal .g{aspect-ratio:1;border-radius:10px;background:linear-gradient(160deg,#1a2650,#0f1836);border:1px solid var(--stroke);
+    display:flex;align-items:center;justify-content:center;font-size:24px;position:relative}
+  .gal .g .pl{position:absolute;bottom:4px;right:6px;font-size:14px}
+
+  /* diag rows */
+  .drow{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;background:rgba(16,26,54,.45);border:1px solid rgba(90,150,255,.14);margin-bottom:8px;font-size:13px}
+  .drow .ok{color:var(--green);font-weight:800} .drow .no{color:#ffb44d;font-weight:800}
+
+  /* reports table */
+  .rtab{width:100%;border-collapse:collapse;font-size:13px}
+  .rtab th{text-align:right;color:var(--muted);font-weight:700;padding:10px;border-bottom:1px solid var(--stroke);font-size:12px}
+  .rtab td{padding:11px 10px;border-bottom:1px solid rgba(90,150,255,.1)}
+  .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:800}
+  .pill.ok{background:rgba(46,224,106,.15);color:#6ef0a0} .pill.warn{background:rgba(255,180,70,.15);color:#ffc879}
+
+  /* settings */
+  .set{display:flex;align-items:center;justify-content:space-between;padding:14px;border-bottom:1px solid rgba(90,150,255,.12);font-size:14px}
+  .set:last-child{border-bottom:none} .set .d{font-size:12px;color:var(--muted);margin-top:3px}
+  .sw{width:46px;height:26px;border-radius:20px;background:#22c35e;position:relative} .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff}
+
+  /* bottom strip */
+  .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;padding:14px;border-radius:16px;
+    background:linear-gradient(120deg,rgba(10,20,46,.8),rgba(16,34,74,.6));border:1px solid var(--stroke)}
+  .sp{display:flex;align-items:center;gap:10px;justify-content:center;font-size:13px;font-weight:700}
+  .sp .si{font-size:22px}
+  .muted{color:var(--muted)} .mb0{margin-bottom:0}
+  @media(max-width:860px){ .shell{grid-template-columns:1fr} .side{position:static} .nav{display:inline-flex;margin:4px}
+    .tiles{grid-template-columns:repeat(3,1fr)} .grid3,.grid2{grid-template-columns:1fr} .gal{grid-template-columns:repeat(4,1fr)}
+    .strip{grid-template-columns:repeat(2,1fr)} }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- brand bar -->
+  <div class="brand">
+    <div class="l">
+      <div class="logo">
+        <svg width="34" height="34" viewBox="0 0 34 34"><path d="M25 9a9 9 0 1 0 0 16" fill="none" stroke="#2f8bff" stroke-width="4" stroke-linecap="round"/><path d="M17 7v20M17 7c5 0 8 3 8 7s-3 6-8 6" fill="none" stroke="#7db4ff" stroke-width="3.2" stroke-linecap="round"/></svg>
+      </div>
+      <div>
+        <h1>CENTER <b>POINT</b> <span class="v">V8</span></h1>
+        <div class="sub">نقل بياناتك بكل سهولة وأمان بين كافة الأجهزة</div>
+      </div>
+    </div>
+    <div class="badge">★ الأحدث<br>والأقوى</div>
+  </div>
+
+  <div class="shell">
+    <!-- sidebar -->
+    <div class="side" id="side">
+      <div class="nav on" data-s="home"><span class="ic">🏠</span> الرئيسية</div>
+      <div class="nav" data-s="transfer"><span class="ic">📲</span> نقل البيانات</div>
+      <div class="nav" data-s="backup"><span class="ic">☁️</span> النسخ الاحتياطي</div>
+      <div class="nav" data-s="restore"><span class="ic">♻️</span> استعادة البيانات</div>
+      <div class="nav" data-s="files"><span class="ic">📂</span> مدير الملفات</div>
+      <div class="nav" data-s="apps"><span class="ic">📦</span> التطبيقات و APK</div>
+      <div class="nav" data-s="contacts"><span class="ic">👤</span> جهات الاتصال</div>
+      <div class="nav" data-s="gallery"><span class="ic">🖼️</span> الصور والفيديو</div>
+      <div class="nav" data-s="usb"><span class="ic">🩺</span> تشخيص USB</div>
+      <div class="nav" data-s="reports"><span class="ic">📊</span> التقارير</div>
+      <div class="nav" data-s="settings"><span class="ic">⚙️</span> الإعدادات</div>
+    </div>
+
+    <!-- main -->
+    <div class="main">
+
+      <!-- HOME -->
+      <div class="sec on" id="s-home">
+        <div class="hdr"><div class="t"><span class="dot"></span> مرحباً بك في Center Point Transfer V8</div><button class="btn">🔄 تحديث الأجهزة</button></div>
+        <div class="grid2" style="margin-bottom:14px">
+          <div class="dev"><div class="top"><div class="ic">🤖</div><div><div class="model">Samsung Galaxy A14</div><div class="os">Android 14 · ADB · نقل كامل</div></div></div>
+            <div class="rowb"><div class="lab"><b>82%</b><span>🔋 البطارية</span></div><div class="bar"><i class="g" style="width:82%"></i></div></div>
+            <div class="rowb"><div class="lab"><span>التخزين: 96 / 128 GB</span></div><div class="bar"><i class="b" style="width:75%"></i></div></div>
+          </div>
+          <div class="dev"><div class="top"><div class="ic">🍎</div><div><div class="model">iPhone 13</div><div class="os">iOS 17 · Apple</div></div></div>
+            <div class="rowb"><div class="lab"><b>64%</b><span>🔋 البطارية</span></div><div class="bar"><i class="g" style="width:64%"></i></div></div>
+            <div class="rowb"><div class="lab"><span>التخزين: غير متاح للآيفون</span></div><div class="bar"><i class="b" style="width:0%"></i></div></div>
+          </div>
+        </div>
+        <div class="tiles">
+          <div class="tile t1" data-go="transfer"><div class="i">📲</div><div class="l">نقل هاتف لهاتف</div></div>
+          <div class="tile t2" data-go="backup"><div class="i">☁️</div><div class="l">النسخ الاحتياطي</div></div>
+          <div class="tile t3" data-go="apps"><div class="i">📦</div><div class="l">مدير التطبيقات</div></div>
+          <div class="tile t4" data-go="files"><div class="i">📂</div><div class="l">مدير الملفات</div></div>
+          <div class="tile t5" data-go="gallery"><div class="i">🖼️</div><div class="l">معرض الصور</div></div>
+        </div>
+        <div class="grid3">
+          <div class="card"><h3>🕒 آخر العمليات</h3>
+            <div style="font-size:13px;border-right:3px solid var(--green);padding-right:8px;margin-bottom:12px">نقل 428 صورة → Galaxy A14<div class="muted" style="font-size:11px">قبل 5 دقائق · نجاح 100%</div></div>
+            <div style="font-size:13px;border-right:3px solid var(--green);padding-right:8px">نسخة احتياطية iPhone 13<div class="muted" style="font-size:11px">قبل ساعة</div></div>
+          </div>
+          <div class="card" style="text-align:center"><h3 style="justify-content:center">📈 حالة النظام</h3><div style="font-size:44px;margin:8px 0">✅</div><div style="font-size:16px;font-weight:800">الأداء ممتاز</div><div class="muted" style="font-size:12px">جهازان متصلان</div></div>
+          <div class="card"><h3>✨ مزايا V8</h3>
+            <div class="feat mb0" style="padding:9px 11px"><div class="fi" style="width:34px;height:34px;font-size:17px">⚡</div><div class="fx"><b>محرّك موحّد</b><span>ADB + MTP تلقائي</span></div><span class="ok">✔</span></div>
+            <div class="feat mb0" style="padding:9px 11px;margin-top:8px"><div class="fi" style="width:34px;height:34px;font-size:17px">🔎</div><div class="fx"><b>تحقق كامل</b><span>فحص كل ملف</span></div><span class="ok">✔</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSFER -->
+      <div class="sec" id="s-transfer">
+        <div class="hdr"><div class="t"><span class="dot"></span> نقل البيانات — هاتف لهاتف</div><button class="btn g lg">⚡ ابدأ النقل الآن</button></div>
+        <div class="grid2">
+          <div>
+            <div class="bridge">
+              <div style="text-align:center"><div class="pscr a">🤖<div class="tg">المصدر (القديم)</div></div></div>
+              <div class="arrow">⇄</div>
+              <div style="text-align:center"><div class="pscr i">🍎<div class="tg">الهدف (الجديد)</div></div></div>
+            </div>
+            <div class="mode">🔀 <b>المحرّك الموحّد:</b> المصدر <b>ADB</b> ← الوجهة <b>Apple</b><br><span class="muted">يدعمه هذا النقل: صور ✔ · فيديو ✔ · مستندات ✔ · جهات اتصال (VCF يدوي)</span></div>
+            <div class="grid3">
+              <div class="stat"><div class="k">📱 مساحة الهدف</div><div class="v">48 GB</div></div>
+              <div class="stat"><div class="k">⚡ السرعة</div><div class="v">42 MB/s</div></div>
+              <div class="stat"><div class="k">📄 الملفات</div><div class="v">1,240</div></div>
+            </div>
+            <div class="prog">
+              <div class="st"><span>جاري نقل الصور والفيديو…</span><b>75%</b></div>
+              <div class="track"><i style="width:75%"></i></div>
+              <div class="meta"><span>تم: 930</span><span>المتبقي: 310</span><span>⏱ 00:01:20</span></div>
+            </div>
+          </div>
+          <div class="card" style="height:fit-content"><h3>✅ اختر البيانات</h3>
+            <div class="ci on"><div class="n"><span class="ei">🖼️</span> الصور</div><div class="ck">✓</div></div>
+            <div class="ci on"><div class="n"><span class="ei">🎬</span> الفيديوهات</div><div class="ck">✓</div></div>
+            <div class="ci on"><div class="n"><span class="ei">🎵</span> الصوتيات</div><div class="ck">✓</div></div>
+            <div class="ci"><div class="n"><span class="ei">📄</span> المستندات</div><div class="ck"></div></div>
+            <div class="ci"><div class="n"><span class="ei">👤</span> جهات الاتصال</div><div class="ck"></div></div>
+            <button class="btn ghost" style="width:100%;margin-top:12px">تحديد الكل</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BACKUP -->
+      <div class="sec" id="s-backup">
+        <div class="hdr"><div class="t"><span class="dot"></span> النسخ الاحتياطي</div><button class="btn g">💾 إنشاء نسخة احتياطية</button></div>
+        <div class="grid2">
+          <div class="card"><h3>📱 الجهاز المصدر</h3>
+            <div class="dev" style="box-shadow:none"><div class="top"><div class="ic">🤖</div><div><div class="model">Samsung Galaxy A14</div><div class="os">Android 14 · ADB</div></div></div></div>
+            <h3 style="margin-top:16px">اختر ما تريد نسخه</h3>
+            <div class="ci on"><div class="n"><span class="ei">🖼️</span> الوسائط (صور/فيديو)</div><div class="ck">✓</div></div>
+            <div class="ci on"><div class="n"><span class="ei">👤</span> جهات الاتصال</div><div class="ck">✓</div></div>
+            <div class="ci on"><div class="n"><span class="ei">📦</span> التطبيقات (APK)</div><div class="ck">✓</div></div>
+            <div class="ci"><div class="n"><span class="ei">💬</span> الرسائل</div><div class="ck"></div></div>
+          </div>
+          <div class="card"><h3>🗂️ النسخ المحفوظة</h3>
+            <div class="arow"><div class="ai">💾</div><div class="an"><b>Galaxy A14 — كامل</b><span>2026-11-23 · 14.2 GB</span></div><button class="btn ghost" style="padding:7px 12px">♻️ استعادة</button></div>
+            <div class="arow"><div class="ai">💾</div><div class="an"><b>iPhone 13 — وسائط</b><span>2026-11-22 · 8.1 GB</span></div><button class="btn ghost" style="padding:7px 12px">♻️ استعادة</button></div>
+            <div class="arow mb0"><div class="ai">💾</div><div class="an"><b>Galaxy S21 — جهات اتصال</b><span>2026-11-20 · 3 MB</span></div><button class="btn ghost" style="padding:7px 12px">♻️ استعادة</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESTORE -->
+      <div class="sec" id="s-restore">
+        <div class="hdr"><div class="t"><span class="dot"></span> استعادة البيانات</div><button class="btn g">♻️ بدء الاستعادة</button></div>
+        <div class="grid2">
+          <div class="card"><h3>1) اختر النسخة الاحتياطية</h3>
+            <div class="arow on" style="border-color:#2f8bff"><div class="ai">💾</div><div class="an"><b>Galaxy A14 — كامل</b><span>2026-11-23 · 14.2 GB</span></div><div class="ck" style="border-color:#2f8bff;background:#2f8bff">✓</div></div>
+            <div class="arow"><div class="ai">💾</div><div class="an"><b>iPhone 13 — وسائط</b><span>2026-11-22 · 8.1 GB</span></div><div class="ck"></div></div>
+          </div>
+          <div class="card"><h3>2) جهاز الوجهة</h3>
+            <div class="dev" style="box-shadow:none"><div class="top"><div class="ic">🤖</div><div><div class="model">Galaxy A14 (الجديد)</div><div class="os">Android 14 · ADB · جاهز</div></div></div>
+              <div class="rowb"><div class="lab"><span>المساحة المتاحة: 110 GB</span></div><div class="bar"><i class="b" style="width:20%"></i></div></div></div>
+            <div class="mode" style="margin-top:14px">ℹ️ ستُستعاد 14.2 GB. تأكد من اتصال الجهاز وكفاية المساحة.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILES -->
+      <div class="sec" id="s-files">
+        <div class="hdr"><div class="t"><span class="dot"></span> مدير الملفات</div><div style="display:flex;gap:8px"><button class="btn ghost">⬆️ رفع</button><button class="btn ghost">⬇️ تنزيل</button><button class="btn r">🗑️ حذف</button></div></div>
+        <div class="card">
+          <div class="pathbar">📁 /sdcard/ › DCIM › Camera</div>
+          <div class="flist">
+            <div class="frow"><span class="fi">📁</span><span class="fn">..</span><span class="fsz">مجلد أعلى</span></div>
+            <div class="frow"><span class="fi">🖼️</span><span class="fn">IMG_20261123_142501.jpg</span><span class="fsz">4.2 MB</span></div>
+            <div class="frow"><span class="fi">🎬</span><span class="fn">VID_20261122_190233.mp4</span><span class="fsz">128 MB</span></div>
+            <div class="frow"><span class="fi">🖼️</span><span class="fn">IMG_20261121_083010.jpg</span><span class="fsz">3.8 MB</span></div>
+            <div class="frow"><span class="fi">📄</span><span class="fn">notes.pdf</span><span class="fsz">640 KB</span></div>
+          </div>
+          <div class="mode" style="margin-bottom:0">🛡️ محمي: لا يمكن حذف المسارات الحساسة (النظام، جذر البطاقة). تأكيد قبل أي حذف.</div>
+        </div>
+      </div>
+
+      <!-- APPS -->
+      <div class="sec" id="s-apps">
+        <div class="hdr"><div class="t"><span class="dot"></span> التطبيقات و APK</div><div style="display:flex;gap:8px"><button class="btn ghost">📥 استخراج APK</button><button class="btn g">📤 تثبيت APK</button></div></div>
+        <div class="card">
+          <div class="arow"><div class="ai">💬</div><div class="an"><b>WhatsApp</b><span>com.whatsapp · 112 MB</span></div><button class="btn ghost" style="padding:7px 12px">استخراج</button></div>
+          <div class="arow"><div class="ai">📷</div><div class="an"><b>Instagram</b><span>com.instagram.android · 86 MB</span></div><button class="btn ghost" style="padding:7px 12px">استخراج</button></div>
+          <div class="arow"><div class="ai">🎮</div><div class="an"><b>PUBG Mobile</b><span>com.tencent.ig · 1.4 GB · Split APK</span></div><button class="btn ghost" style="padding:7px 12px">استخراج</button></div>
+          <div class="arow mb0"><div class="ai">🏦</div><div class="an"><b>تطبيق البنك</b><span>com.bank.app · 54 MB</span></div><button class="btn ghost" style="padding:7px 12px">استخراج</button></div>
+        </div>
+      </div>
+
+      <!-- CONTACTS -->
+      <div class="sec" id="s-contacts">
+        <div class="hdr"><div class="t"><span class="dot"></span> جهات الاتصال</div><button class="btn g">📇 تصدير VCF</button></div>
+        <div class="grid2">
+          <div class="card" style="text-align:center"><h3 style="justify-content:center">📊 الإجمالي</h3><div style="font-size:48px;font-weight:900;margin:8px 0">1,284</div><div class="muted">جهة اتصال على Galaxy A14</div></div>
+          <div class="card"><h3>🔒 طريقة آمنة</h3>
+            <p style="font-size:13px;line-height:1.9;color:#cfe0ff">يُصدَّر ملف VCF قياسي، ثم تُفتح شاشة «استيراد جهات الاتصال» على جهاز الوجهة <b>بموافقتك</b>. لا يتم نقل أي كلمات مرور أو حسابات.</p>
+            <div class="mode mb0">✅ متوافق مع Android و iPhone عبر ملف واحد .vcf</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GALLERY -->
+      <div class="sec" id="s-gallery">
+        <div class="hdr"><div class="t"><span class="dot"></span> الصور والفيديو</div><button class="btn g">⬇️ تنزيل المحدد</button></div>
+        <div class="card">
+          <div class="gal">
+            <div class="g">🖼️</div><div class="g">🖼️</div><div class="g">🎬<span class="pl">▶</span></div><div class="g">🖼️</div><div class="g">🖼️</div><div class="g">🖼️</div>
+            <div class="g">🎬<span class="pl">▶</span></div><div class="g">🖼️</div><div class="g">🖼️</div><div class="g">🖼️</div><div class="g">🎬<span class="pl">▶</span></div><div class="g">🖼️</div>
+          </div>
+          <div class="muted" style="margin-top:12px;font-size:13px">428 صورة · 36 فيديو — من مجلد DCIM و Pictures</div>
+        </div>
+      </div>
+
+      <!-- USB -->
+      <div class="sec" id="s-usb">
+        <div class="hdr"><div class="t"><span class="dot"></span> تشخيص USB</div><button class="btn">🔄 إعادة الفحص</button></div>
+        <div class="card">
+          <div class="drow"><span>🔌 منفذ USB نشط</span><span class="ok">✔ متصل</span></div>
+          <div class="drow"><span>🤖 تعريف الجهاز (ADB)</span><span class="ok">✔ مُصرّح</span></div>
+          <div class="drow"><span>📟 وضع نقل الملفات (MTP)</span><span class="ok">✔ متاح</span></div>
+          <div class="drow"><span>🍎 تعريفات Apple</span><span class="no">! غير مثبّت</span></div>
+          <div class="drow mb0"><span>⚙️ أدوات ADB (platform-tools)</span><span class="ok">✔ جاهزة</span></div>
+          <div class="mode" style="margin-bottom:0">💡 لتفعيل النقل الكامل: فعّل «تصحيح USB» من خيارات المطوّر على الهاتف.</div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="sec" id="s-reports">
+        <div class="hdr"><div class="t"><span class="dot"></span> التقارير</div><button class="btn ghost">📂 فتح مجلد التقارير</button></div>
+        <div class="grid3" style="margin-bottom:14px">
+          <div class="stat"><div class="k">إجمالي العمليات</div><div class="v">37</div></div>
+          <div class="stat"><div class="k">متوسط السرعة</div><div class="v">38 MB/s</div></div>
+          <div class="stat"><div class="k">الأخطاء المسجلة</div><div class="v">2</div></div>
+        </div>
+        <div class="card">
+          <table class="rtab">
+            <tr><th>التاريخ</th><th>النقل</th><th>الملفات</th><th>السرعة</th><th>الحالة</th></tr>
+            <tr><td>23/11 14:25</td><td>A14 → iPhone</td><td>1,240</td><td>42 MB/s</td><td><span class="pill ok">نجاح 100%</span></td></tr>
+            <tr><td>23/11 12:10</td><td>iPhone → A14</td><td>860</td><td>35 MB/s</td><td><span class="pill ok">نجاح 100%</span></td></tr>
+            <tr><td>22/11 19:02</td><td>S21 → A14 (MTP)</td><td>512</td><td>18 MB/s</td><td><span class="pill warn">فشل 3 ملفات</span></td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="sec" id="s-settings">
+        <div class="hdr"><div class="t"><span class="dot"></span> الإعدادات</div><button class="btn ghost">↩️ استعادة الافتراضي</button></div>
+        <div class="card" style="padding:4px 16px">
+          <div class="set"><div><b>مجلد الحفظ والتقارير</b><div class="d">Documents\CenterPoint Transfer</div></div><button class="btn ghost" style="padding:7px 12px">تغيير</button></div>
+          <div class="set"><div><b>المظهر الداكن</b><div class="d">واجهة احترافية داكنة</div></div><div class="sw"></div></div>
+          <div class="set"><div><b>تحقق كامل بعد النقل</b><div class="d">فحص حجم كل ملف</div></div><div class="sw"></div></div>
+          <div class="set"><div><b>تحميل ADB/WebView2 تلقائياً</b><div class="d">عند الحاجة</div></div><div class="sw"></div></div>
+          <div class="set"><div><b>عن البرنامج</b><div class="d">CENTER POINT TRANSFER V8.1 · سنتر بوينت للاتصالات</div></div><span class="muted">📞 0782 915 5923</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- bottom strip -->
+  <div class="strip">
+    <div class="sp"><span class="si">🎧</span> دعم فني متواصل</div>
+    <div class="sp"><span class="si">🛡️</span> أمان وخصوصية عالية</div>
+    <div class="sp"><span class="si">🚀</span> أداء وسرعة عالية</div>
+    <div class="sp"><span class="si">🪟</span> متوافق مع Windows 10/11</div>
+  </div>
+
+</div>
+<script>
+  function go(s){
+    document.querySelectorAll('.sec').forEach(function(x){x.classList.remove('on')});
+    document.querySelectorAll('.nav').forEach(function(x){x.classList.remove('on')});
+    var sec=document.getElementById('s-'+s); if(sec) sec.classList.add('on');
+    var nav=document.querySelector('.nav[data-s="'+s+'"]'); if(nav) nav.classList.add('on');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  document.querySelectorAll('.nav').forEach(function(n){ n.addEventListener('click',function(){ go(n.getAttribute('data-s')); }); });
+  document.querySelectorAll('[data-go]').forEach(function(t){ t.addEventListener('click',function(){ go(t.getAttribute('data-go')); }); });
+</script>
+</body>
+</html>
