@@ -30,6 +30,12 @@ jobs:
       - name: Static release checks
         run: python CP/tests/verify_release.py
 
+      - name: Static code analysis (braces, duplicates, usings, versions)
+        run: python CP/tests/static_checks.py
+
+      - name: UI/JS checks
+        run: python CP/tests/check_ui_js.py
+
       - name: Restore
         run: dotnet restore CP/CenterPoint.csproj
 
