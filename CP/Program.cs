@@ -2216,9 +2216,9 @@ namespace CenterPoint
                 webHome.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
                 webHome.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 webHome.CoreWebView2.WebMessageReceived += OnWebMsg;
-                string html = Path.Combine(AppDir, "ui", "index.html");
-                if (File.Exists(html)) webHome.CoreWebView2.Navigate(new Uri(html).AbsoluteUri);
-                else webHome.CoreWebView2.NavigateToString("<body style='background:#0f1424;color:#fff;font-family:Arial;text-align:center;padding-top:60px' dir='rtl'><h2>ملف الواجهة ui/index.html غير موجود بجانب البرنامج.</h2></body>");
+                string html = EnsureUiHtml();
+                if (!string.IsNullOrEmpty(html) && File.Exists(html)) webHome.CoreWebView2.Navigate(new Uri(html).AbsoluteUri);
+                else webHome.CoreWebView2.NavigateToString("<body style='background:#0f1424;color:#fff;font-family:Arial;text-align:center;padding-top:60px' dir='rtl'><h2>تعذّر تحميل واجهة البرنامج.</h2></body>");
                 webReady = true;
             }
             catch (Exception ex)
@@ -2302,6 +2302,32 @@ namespace CenterPoint
             }
             catch { }
             try { CpLog("OP", "أُلغيت عملية النقل يدوياً وحُرّر القفل"); } catch { }
+        }
+
+        // يضمن توفّر واجهة الويب: يستخرج النسخة المضمّنة في الـexe (تطابق الإصدار دائماً)،
+        // ويرجع للنسخة بجانب الـexe إن وُجدت. هكذا يعمل الـexe وحده بعد التحديث التلقائي.
+        string EnsureUiHtml()
+        {
+            // 1) النسخة المضمّنة داخل الـexe
+            try
+            {
+                var asm = System.Reflection.Assembly.GetExecutingAssembly();
+                string resName = asm.GetManifestResourceNames().FirstOrDefault(n => n.EndsWith("index.html"));
+                if (resName != null)
+                {
+                    string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CenterPointTransfer", "ui");
+                    Directory.CreateDirectory(dir);
+                    string outp = Path.Combine(dir, "index.html");
+                    using (var st = asm.GetManifestResourceStream(resName))
+                    using (var fs = File.Create(outp))
+                        st.CopyTo(fs);
+                    return outp;
+                }
+            }
+            catch { }
+            // 2) احتياطي: بجانب الـexe (وضع التطوير)
+            try { string a = Path.Combine(AppDir, "ui", "index.html"); if (File.Exists(a)) return a; } catch { }
+            return null;
         }
 
         void OpenLastReport()

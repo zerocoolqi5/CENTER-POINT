@@ -26,6 +26,10 @@ jobs:
         shell: bash
         run: echo "${GITHUB_REF_NAME#v}" > publish/version.txt
 
+      - name: Package full zip (exe + ui)
+        shell: pwsh
+        run: Compress-Archive -Path publish/* -DestinationPath "CenterPoint-Transfer-${{ github.ref_name }}.zip" -Force
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -33,3 +37,4 @@ jobs:
           files: |
             publish/CenterPoint-Transfer.exe
             publish/version.txt
+            CenterPoint-Transfer-${{ github.ref_name }}.zip

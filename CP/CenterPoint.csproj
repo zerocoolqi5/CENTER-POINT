@@ -20,4 +20,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <!-- تضمين واجهة الويب داخل الـexe ليكون مكتفياً بذاته (يعمل التحديث التلقائي الذي ينشر exe فقط) -->
+    <EmbeddedResource Include="ui\index.html" />
+  </ItemGroup>
 </Project>
