@@ -183,10 +183,7 @@ namespace CenterPoint
             return r;
         }
 
-        void OpenUrl(string url)
-        {
-            try { Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }); } catch { }
-        }
+        // OpenUrl مُعرّفة مرّة واحدة في Program.cs (static) وتُستخدم من هنا.
 
         // ===== تحديث تلقائي كامل: تنزيل الـexe الجديد واستبداله عبر سكربت ثم إعادة التشغيل =====
         async System.Threading.Tasks.Task DownloadAndInstall(string exeUrl, string version, string htmlUrl)
