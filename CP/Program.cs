@@ -328,6 +328,7 @@ namespace CenterPoint
         public static List<Device> All()
         {
             ClearPropCache();                 // تحديث: أعد قراءة خصائص الأجهزة من جديد
+            ClearTtl();                        // وأعد قراءة البطارية/التخزين/الذاكرة
             var l = ListAndroid();
             l.AddRange(ListIos());
             try { l.AddRange(ListMtp()); } catch { }
@@ -366,28 +367,56 @@ namespace CenterPoint
             string v; return p.TryGetValue(key, out v) ? (v ?? "").Trim() : "";
         }
 
+        // تخزين مؤقت قصير العمر لقيم تتغيّر ببطء (بطارية/تخزين/ذاكرة) — يمنع إطلاق adb مكرّراً
+        // عندما تقرأها عدة شاشات معاً في نفس دورة التحديث
+        static readonly Dictionary<string, KeyValuePair<DateTime, object>> _ttl = new Dictionary<string, KeyValuePair<DateTime, object>>();
+        public static void ClearTtl() { lock (_ttl) { _ttl.Clear(); } }
+        static T Cached<T>(string key, int ttlSec, Func<T> load)
+        {
+            lock (_ttl)
+            {
+                KeyValuePair<DateTime, object> e;
+                if (_ttl.TryGetValue(key, out e) && (DateTime.Now - e.Key).TotalSeconds < ttlSec) return (T)e.Value;
+            }
+            T val = load();   // النداء البطيء خارج القفل
+            lock (_ttl) { _ttl[key] = new KeyValuePair<DateTime, object>(DateTime.Now, val); }
+            return val;
+        }
+
         public static string Ram(Device d)
         {
-            var r = Shell.Run("adb", "-s " + d.Id + " shell cat /proc/meminfo");
-            if (!r.ok) return "";
-            var m = Regex.Match(r.outp, @"MemTotal:\s*(\d+)\s*kB");
-            if (!m.Success) return "";
-            if (long.TryParse(m.Groups[1].Value, out long kb))
-                return string.Format("{0:0.0} GB", kb / 1024.0 / 1024.0);
-            return "";
+            if (d == null || string.IsNullOrEmpty(d.Id)) return "";
+            return Cached("ram:" + d.Id, 30, () =>
+            {
+                var r = Shell.Run("adb", "-s " + d.Id + " shell cat /proc/meminfo");
+                if (!r.ok) return "";
+                var m = Regex.Match(r.outp, @"MemTotal:\s*(\d+)\s*kB");
+                if (!m.Success) return "";
+                long kb; if (long.TryParse(m.Groups[1].Value, out kb)) return string.Format("{0:0.0} GB", kb / 1024.0 / 1024.0);
+                return "";
+            });
         }
 
         public static int Battery(Device d)
         {
-            var r = Shell.Run("adb", "-s " + d.Id + " shell dumpsys battery");
-            if (!r.ok) return -1;
-            var m = Regex.Match(r.outp, @"level:\s*(\d+)");
-            if (m.Success && int.TryParse(m.Groups[1].Value, out int lv)) return lv;
-            return -1;
+            if (d == null || string.IsNullOrEmpty(d.Id)) return -1;
+            return Cached("bat:" + d.Id, 8, () =>
+            {
+                var r = Shell.Run("adb", "-s " + d.Id + " shell dumpsys battery");
+                if (!r.ok) return -1;
+                var m = Regex.Match(r.outp, @"level:\s*(\d+)");
+                int lv; if (m.Success && int.TryParse(m.Groups[1].Value, out lv)) return lv;
+                return -1;
+            });
         }
 
         // (totalGB, usedGB, freeGB, pct)
         public static (double tot, double used, double free, int pct) Storage(Device d)
+        {
+            if (d == null || string.IsNullOrEmpty(d.Id)) return (0, 0, 0, 0);
+            return Cached("stor:" + d.Id, 10, () => StorageRaw(d));
+        }
+        static (double tot, double used, double free, int pct) StorageRaw(Device d)
         {
             var r = Shell.Run("adb", "-s " + d.Id + " shell df /sdcard");
             if (!r.ok) return (0, 0, 0, 0);
@@ -602,6 +631,8 @@ namespace CenterPoint
             ShowPage("home");
             MinimumSize = new Size(1056, 730);
             Resize += (s, e) => LayoutShell();
+            // تهيئة خادم adb مسبقاً بخيط خلفي كي لا يتأخّر أول كشف للأجهزة
+            System.Threading.Tasks.Task.Run(() => { try { Shell.Run("adb", "start-server", 15000); } catch { } });
             Load += (s, e) => { LayoutShell(); Refresh2(); CheckUpdateStartup(); };
 
             // مراقبة الأداء والذاكرة — يعرض استهلاك الذاكرة في عنوان النافذة
