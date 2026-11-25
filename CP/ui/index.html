@@ -7,26 +7,22 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   :root{
-    --card:rgba(26,38,70,.55); --stroke:rgba(80,130,220,.35);
-    --txt:#eaf1ff; --muted:#9fb3d6; --blue:#2f8bff; --green:#2ee06a;
+    --card:rgba(18,30,58,.72); --stroke:rgba(70,140,240,.38);
+    --txt:#eaf1ff; --muted:#9fb3d6; --blue:#2f8bff; --green:#2ee06a; --cyan:#2ff0ff;
   }
   html,body{height:100%;}
   body{
     font-family:'Segoe UI',Tahoma,Arial,sans-serif; color:var(--txt);
     background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(40,110,230,.25), transparent 60%),
-      radial-gradient(900px 500px at 10% 110%, rgba(120,40,200,.20), transparent 60%),
-      linear-gradient(135deg,#070b16,#0c1430 55%,#0a1226);
+      radial-gradient(1200px 600px at 82% -10%, rgba(40,110,230,.28), transparent 60%),
+      radial-gradient(900px 500px at 8% 115%, rgba(60,40,200,.18), transparent 60%),
+      linear-gradient(135deg,#060a14,#0a1228 55%,#070e22);
     overflow-x:hidden; overflow-y:auto;
   }
-  .wrap{ padding:16px; max-width:1120px; margin:0 auto; }
+  .wrap{ padding:16px; max-width:1160px; margin:0 auto; }
   .view{ display:none; } .view.on{ display:block; }
 
-  .hdr{ display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:16px; margin-bottom:14px;
-    background:linear-gradient(120deg, rgba(20,70,130,.75), rgba(35,120,200,.55)); border:1px solid var(--stroke);
-    box-shadow:0 8px 30px rgba(20,90,200,.25), inset 0 1px 0 rgba(255,255,255,.08); backdrop-filter:blur(8px); }
-  .hdr .t{ font-size:18px; font-weight:800; display:flex; align-items:center; gap:10px; }
-  .hdr .t .dot{ width:12px;height:12px;border-radius:50%;background:var(--green); box-shadow:0 0 12px var(--green);}
+  /* ===== generic buttons ===== */
   .btn{ border:none; cursor:pointer; color:#fff; font-weight:700; font-family:inherit; border-radius:10px; padding:9px 16px; font-size:13px;
     background:linear-gradient(135deg,#2f8bff,#1760d6); box-shadow:0 6px 18px rgba(30,100,230,.45); transition:.15s; }
   .btn:hover{ filter:brightness(1.12); transform:translateY(-1px); }
@@ -34,131 +30,97 @@
   .btn.r{ background:linear-gradient(135deg,#e5484d,#b5262b); box-shadow:0 6px 18px rgba(210,50,60,.4); }
   .btn.ghost{ background:rgba(40,60,110,.5); box-shadow:none; border:1px solid var(--stroke); }
 
-  /* ===== BRAND BAR ===== */
-  .brandbar{ display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-radius:20px; margin-bottom:16px;
-    background:linear-gradient(120deg, rgba(12,20,44,.95), rgba(24,40,86,.8) 58%, rgba(46,30,104,.72));
-    border:1px solid var(--stroke); box-shadow:0 16px 48px rgba(24,60,160,.3), inset 0 1px 0 rgba(255,255,255,.1);
+  /* ===================== V13.8 HOME ===================== */
+  .brand13{ display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-radius:18px; margin-bottom:16px;
+    background:linear-gradient(100deg,#07132b 0%,#0c2150 48%,#0a1a42 100%); border:1px solid rgba(70,150,255,.45);
+    box-shadow:0 0 0 1px rgba(60,150,255,.12), 0 12px 40px rgba(20,70,180,.35), inset 0 1px 0 rgba(120,180,255,.18);
     position:relative; overflow:hidden; }
-  .brandbar::after{ content:""; position:absolute; inset:0; pointer-events:none;
-    background:radial-gradient(560px 220px at 86% -50%, rgba(100,120,255,.28), transparent 60%),
-               radial-gradient(360px 200px at 12% 150%, rgba(140,60,220,.22), transparent 60%); }
-  .brand{ display:flex; align-items:center; gap:18px; position:relative; z-index:1; }
-  .logo{ width:62px; height:62px; border-radius:18px; display:flex; align-items:center; justify-content:center; flex:none;
-    background:linear-gradient(135deg,#2f8bff,#7b3ff0); box-shadow:0 10px 30px rgba(80,90,235,.55), inset 0 1px 0 rgba(255,255,255,.35); }
-  .logo svg{ width:38px; height:38px; }
-  .brand .txt .name{ font-size:27px; font-weight:900; letter-spacing:5px; color:#fff; line-height:1;
-    text-shadow:0 2px 18px rgba(90,140,255,.5); }
-  .brand .txt .name span{ color:#6ab0ff; }
-  .brand .txt .sub{ margin-top:8px; font-size:13px; color:#aebfe0; letter-spacing:.5px; font-weight:600; }
-  .brand .txt .sub .pro{ color:#d8b23a; font-weight:800; letter-spacing:2px; }
-  .brandbar .meta{ text-align:left; position:relative; z-index:1; }
-  .brandbar .chip{ display:inline-flex; align-items:center; gap:8px; padding:8px 15px; border-radius:30px; font-size:12px; font-weight:700;
-    background:rgba(40,60,110,.55); border:1px solid var(--stroke); color:#c3d8ff; }
-  .brandbar .chip .d{ width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 11px var(--green); }
-  .brandbar .ver{ margin-top:9px; font-size:11px; color:#8198c2; letter-spacing:3px; font-weight:700; }
+  .brand13::after{ content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(520px 200px at 72% -40%, rgba(60,150,255,.28), transparent 60%); }
+  .b13l{ display:flex; align-items:center; gap:15px; position:relative; z-index:1; }
+  .b13logo{ width:56px; height:56px; border-radius:15px; background:linear-gradient(135deg,#1f8bff,#0a4fd0); display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 22px rgba(40,140,255,.7), inset 0 1px 0 rgba(255,255,255,.35); }
+  .b13logo svg{ width:34px; height:34px; }
+  .b13name{ font-size:25px; font-weight:900; color:#fff; letter-spacing:3px; line-height:1; text-shadow:0 0 16px rgba(90,150,255,.5); }
+  .b13name b{ color:var(--cyan); margin-inline-start:8px; text-shadow:0 0 16px rgba(47,240,255,.7); }
+  .b13tag{ font-size:12px; color:#9cc0f5; margin-top:6px; letter-spacing:.3px; }
+  .b13r{ position:relative; z-index:1; text-align:left; }
+  .b13chip{ display:inline-flex; align-items:center; gap:8px; padding:8px 15px; border-radius:30px; font-size:12px; font-weight:800;
+    background:rgba(40,70,130,.5); border:1px solid rgba(70,150,255,.4); color:#cfe2ff; box-shadow:0 0 14px rgba(40,120,255,.25); }
+  .b13chip .d{ width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 11px var(--green); }
+  .b13ver{ margin-top:8px; font-size:11px; color:#86a0cc; letter-spacing:2px; font-weight:800; }
 
-  /* ================= V12 PREMIUM HOME ================= */
-  .v12hdr{ display:flex; justify-content:space-between; align-items:center; padding:16px 22px; border-radius:18px; margin-bottom:16px;
-    background:linear-gradient(100deg,#0a1830 0%,#0d2350 45%,#10204a 100%); border:1px solid rgba(60,130,230,.4);
-    box-shadow:0 10px 40px rgba(20,70,180,.3), inset 0 1px 0 rgba(120,180,255,.15); position:relative; overflow:hidden; }
-  .v12hdr::after{ content:""; position:absolute; inset:0; background:radial-gradient(500px 180px at 70% -40%, rgba(60,150,255,.25), transparent 60%); pointer-events:none; }
-  .v12brand{ display:flex; align-items:center; gap:15px; position:relative; z-index:1; }
-  .v12logo{ width:54px; height:54px; border-radius:15px; background:linear-gradient(135deg,#1f8bff,#0a4fd0); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(30,120,255,.55), inset 0 1px 0 rgba(255,255,255,.3); }
-  .v12logo svg{ width:32px; height:32px; }
-  .v12name{ font-size:24px; font-weight:900; color:#fff; letter-spacing:2px; line-height:1; }
-  .v12name b{ color:#2ff0ff; font-size:22px; margin-inline-start:6px; text-shadow:0 0 14px rgba(47,240,255,.6); }
-  .v12tag{ font-size:12px; color:#8fb8f0; margin-top:5px; letter-spacing:.4px; }
-  .v12right{ display:flex; align-items:center; gap:12px; position:relative; z-index:1; }
-  .v12ar{ font-size:14px; color:#dbe8ff; font-weight:700; }
-  .crown{ font-size:22px; filter:drop-shadow(0 0 8px rgba(240,200,60,.7)); }
+  /* ===== status pills ADB / Fastboot / MTP ===== */
+  .pills{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:16px; }
+  .pill{ display:flex; align-items:center; gap:13px; padding:15px 18px; border-radius:15px;
+    background:linear-gradient(135deg, rgba(16,28,56,.9), rgba(10,18,40,.9)); border:1px solid rgba(70,140,240,.3);
+    box-shadow:0 8px 26px rgba(8,20,55,.5), inset 0 1px 0 rgba(255,255,255,.05); }
+  .pill .chk{ width:34px; height:34px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:900; color:#fff; }
+  .pill.ok .chk{ background:linear-gradient(135deg,#22c35e,#0f7d3f); box-shadow:0 0 16px rgba(40,210,110,.6); }
+  .pill.off .chk{ background:linear-gradient(135deg,#39455f,#222d45); color:#8aa0c8; }
+  .pill .nm{ font-size:17px; font-weight:800; color:#eef4ff; }
+  .pill .ps{ font-size:12px; font-weight:800; margin-top:2px; }
+  .pill.ok .ps{ color:var(--green); } .pill.off .ps{ color:#7f93b6; }
 
-  .v12row{ display:grid; grid-template-columns:1fr 330px; gap:14px; margin-bottom:14px; }
-  .v12dev{ border-radius:16px; background:linear-gradient(135deg, rgba(20,34,66,.8), rgba(12,20,42,.8)); border:1px solid rgba(60,130,230,.35);
-    box-shadow:0 8px 28px rgba(10,30,70,.5), inset 0 1px 0 rgba(255,255,255,.06); padding:16px 18px; min-height:118px; }
-  .devempty{ color:#8aa0c8; font-size:14px; text-align:center; padding:34px 0; }
-  .devtop{ display:flex; align-items:center; gap:16px; }
-  .devph{ width:58px; height:58px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:30px; flex:none;
-    background:linear-gradient(135deg, rgba(60,140,255,.25), rgba(60,140,255,.05)); border:1px solid rgba(90,150,255,.3); box-shadow:0 0 18px rgba(50,130,255,.25); }
-  .devmain{ min-width:150px; }
-  .devok{ color:#2ee06a; font-weight:800; font-size:14px; }
-  .devmodel{ font-size:18px; font-weight:800; color:#fff; margin-top:3px; }
-  .devos{ font-size:12px; color:#9fb3d6; margin-top:2px; }
-  .devstats{ display:flex; gap:10px; margin-inline-start:auto; flex-wrap:wrap; }
-  .ds{ background:rgba(10,18,38,.7); border:1px solid rgba(70,120,200,.3); border-radius:11px; padding:8px 13px; text-align:center; min-width:92px; }
-  .ds span{ display:block; font-size:10.5px; color:#9fb3d6; }
-  .ds b{ font-size:14px; color:#eaf1ff; } .ds b.ok{ color:#2ee06a; }
-  .v12info{ display:grid; gap:10px; }
-  .infocard{ display:flex; align-items:center; gap:12px; border-radius:14px; padding:11px 15px; color:#fff; box-shadow:0 6px 18px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.12); }
-  .infocard .ii{ font-size:22px; } .infocard b{ display:block; font-size:14px; } .infocard span{ font-size:11px; opacity:.85; }
-  .i-green{ background:linear-gradient(135deg,#1fb85f,#0e7a40); } .i-amber{ background:linear-gradient(135deg,#f0a62e,#c07214); } .i-blue{ background:linear-gradient(135deg,#2f8bff,#1456c4); }
+  /* ===== main grid: device + transfer ===== */
+  .mgrid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .glass{ border-radius:16px; background:linear-gradient(140deg, rgba(16,28,58,.85), rgba(10,18,40,.88));
+    border:1px solid rgba(70,140,240,.32); box-shadow:0 10px 32px rgba(8,22,60,.5), inset 0 1px 0 rgba(255,255,255,.05); }
+  .ghead{ display:flex; align-items:center; gap:10px; padding:13px 18px; border-bottom:1px solid rgba(70,140,240,.18); font-size:15px; font-weight:800; color:#cfe0f8; }
+  .ghead .gi{ width:30px;height:30px;border-radius:9px; display:flex;align-items:center;justify-content:center; font-size:16px;
+    background:linear-gradient(135deg,#1f6feb,#0a3aa8); box-shadow:0 0 14px rgba(40,120,255,.5); }
+  .gbody{ padding:16px 18px; }
 
-  .v12big{ display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-bottom:13px; }
-  .bt{ cursor:pointer; border-radius:16px; padding:22px 16px; color:#fff; text-align:center; transition:.15s; position:relative; overflow:hidden;
-    box-shadow:0 10px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.15); }
-  .bt:hover{ transform:translateY(-3px); filter:brightness(1.12); }
-  .bt .bi{ font-size:34px; } .bt .bl{ margin-top:10px; font-size:16px; font-weight:800; line-height:1.4; } .bt .bl span{ display:block; font-size:12px; font-weight:600; opacity:.85; }
-  .b-blue{ background:linear-gradient(145deg,#1f6feb,#0a3aa8); } .b-green{ background:linear-gradient(145deg,#1fb85f,#0e7a40); }
-  .b-purple{ background:linear-gradient(145deg,#7b3ff0,#4a1fa6); } .b-orange{ background:linear-gradient(145deg,#f0802e,#c0491a); }
+  /* device card */
+  .dempty{ color:#88a0c8; font-size:14px; text-align:center; padding:30px 10px; line-height:1.9; }
+  .dtop{ display:flex; gap:16px; align-items:center; }
+  .dph{ width:84px; height:110px; border-radius:16px; flex:none; position:relative;
+    background:linear-gradient(160deg,#16224a,#0d1636); border:3px solid rgba(90,150,255,.55); box-shadow:0 0 22px rgba(50,130,255,.3); }
+  .dph::before{ content:""; position:absolute; top:7px; left:50%; transform:translateX(-50%); width:26px; height:4px; border-radius:3px; background:rgba(150,180,255,.6); }
+  .dph .em{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:38px; }
+  .dmain{ flex:1; min-width:0; }
+  .dmodel{ font-size:20px; font-weight:900; color:#fff; line-height:1.2; }
+  .dand{ display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--green); font-weight:800; margin-top:5px; }
+  .dmeta{ margin-top:9px; font-size:12.5px; color:#b7c8e6; line-height:1.95; }
+  .dmeta b{ color:#8fb0e0; font-weight:700; }
+  .dready{ display:inline-block; margin-top:12px; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:800; color:#fff;
+    background:linear-gradient(135deg,#22c35e,#139046); box-shadow:0 6px 16px rgba(30,170,85,.4); }
 
-  .v12small{ display:grid; grid-template-columns:repeat(6,1fr); gap:11px; margin-bottom:14px; }
-  .st2{ cursor:pointer; border-radius:14px; padding:15px 8px; text-align:center; color:#dbe8ff; transition:.15s;
-    background:linear-gradient(160deg, rgba(26,40,74,.85), rgba(14,22,46,.85)); border:1px solid rgba(60,120,210,.3); box-shadow:0 6px 18px rgba(0,0,0,.3); }
-  .st2:hover{ transform:translateY(-2px); border-color:rgba(90,160,255,.6); }
-  .st2 .si{ font-size:24px; } .st2 div{ font-size:12.5px; font-weight:800; margin-top:6px; } .st2 span{ display:block; font-size:10px; color:#8fb8f0; font-weight:600; }
+  /* transfer summary card */
+  .trow{ display:flex; justify-content:space-between; align-items:center; font-size:14px; margin-bottom:11px; }
+  .trow .k{ color:#9fb3d6; } .trow .v{ font-weight:800; color:#eef4ff; } .trow .v small{ color:#9fb3d6; font-size:12px; font-weight:600; }
+  .ttrack{ height:16px; border-radius:8px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:4px; }
+  .ttrack i{ display:block; height:100%; width:0; border-radius:8px; background:linear-gradient(90deg,#1f9c4d,#3fe06b); box-shadow:0 0 12px rgba(50,210,100,.6); transition:width .5s; }
+  .tpct{ text-align:left; font-size:13px; font-weight:800; color:#bfe8cf; margin-top:6px; }
+  .tbtns{ display:flex; gap:10px; margin-top:16px; }
+  .tbtns .btn{ flex:1; }
 
-  .v12bottom{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:13px; }
-  .vp{ border-radius:16px; padding:15px 17px; min-height:180px; background:var(--card); border:1px solid var(--stroke);
-    box-shadow:0 8px 24px rgba(10,20,50,.4), inset 0 1px 0 rgba(255,255,255,.05); }
-  .vph{ display:flex; justify-content:space-between; align-items:center; font-size:15px; font-weight:800; color:#cdddf5; margin-bottom:12px; }
-  .vph a{ font-size:12px; color:#4da6ff; cursor:pointer; font-weight:600; }
-  .gauges{ display:flex; justify-content:space-around; margin-top:8px; }
-  .gg{ text-align:center; } .gg span{ display:block; font-size:11px; color:#9fb3d6; margin-top:7px; }
-  .ring{ width:78px; height:78px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:#fff; }
-  .g-green{ background:conic-gradient(#2ee06a 0 92%, rgba(255,255,255,.08) 92% 100%); } .g-green::after,.g-blue::after,.g-purple::after{}
-  .g-blue{ background:conic-gradient(#2f8bff 0 72%, rgba(255,255,255,.08) 72% 100%); }
-  .g-purple{ background:conic-gradient(#8140e0 0 85%, rgba(255,255,255,.08) 85% 100%); }
-  .ring{ position:relative; } .ring::before{ content:""; position:absolute; inset:8px; border-radius:50%; background:#0c1426; }
-  .ring{ z-index:0; } .ring > i{ position:relative; z-index:1; font-style:normal; }
-  .updbox{ text-align:center; padding:10px 0; }
-  .updst{ color:#2ee06a; font-weight:800; font-size:15px; }
-  .updver{ color:#4da6ff; font-weight:800; font-size:14px; margin-top:4px; }
-  .updbtn{ margin-top:16px; border:none; cursor:pointer; color:#fff; font-weight:700; font-family:inherit; border-radius:10px; padding:10px 20px; font-size:13px;
-    background:linear-gradient(135deg,#2f8bff,#1760d6); box-shadow:0 6px 18px rgba(30,100,230,.45); }
-  .updbtn:hover{ filter:brightness(1.1); }
-  .v12foot{ display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding:10px 6px; font-size:12px; color:#7f97c0; border-top:1px solid rgba(60,110,190,.2); }
+  /* ===== pro tools ===== */
+  .ptitle{ font-size:16px; font-weight:800; color:#cfe0f8; margin:4px 2px 13px; }
+  .ptools{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+  .ptool{ cursor:pointer; border-radius:15px; padding:20px 10px; text-align:center; transition:.16s;
+    background:linear-gradient(160deg, rgba(16,28,58,.9), rgba(10,18,40,.92)); border:1px solid rgba(70,140,240,.3);
+    box-shadow:0 8px 24px rgba(8,20,55,.45); }
+  .ptool:hover{ transform:translateY(-3px); border-color:rgba(90,170,255,.7); box-shadow:0 0 22px rgba(40,130,255,.35); }
+  .ptool .pi{ width:52px; height:52px; margin:0 auto; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:26px; }
+  .ptool .pl{ margin-top:11px; font-size:14px; font-weight:800; color:#eaf2ff; }
+  .pc-green .pi{ background:linear-gradient(135deg, rgba(34,195,94,.22), rgba(34,195,94,.06)); border:1px solid rgba(40,210,110,.5); box-shadow:0 0 16px rgba(34,195,94,.3); }
+  .pc-cyan .pi{ background:linear-gradient(135deg, rgba(47,240,255,.2), rgba(47,240,255,.05)); border:1px solid rgba(47,240,255,.45); box-shadow:0 0 16px rgba(47,240,255,.28); }
+  .pc-blue .pi{ background:linear-gradient(135deg, rgba(47,139,255,.22), rgba(47,139,255,.06)); border:1px solid rgba(60,140,255,.5); box-shadow:0 0 16px rgba(47,139,255,.3); }
+  .pc-purple .pi{ background:linear-gradient(135deg, rgba(129,64,224,.24), rgba(129,64,224,.06)); border:1px solid rgba(150,90,235,.5); box-shadow:0 0 16px rgba(129,64,224,.3); }
+  .pc-orange .pi{ background:linear-gradient(135deg, rgba(240,145,46,.24), rgba(240,145,46,.06)); border:1px solid rgba(240,150,50,.5); box-shadow:0 0 16px rgba(240,145,46,.3); }
 
-  /* ===== HOME ===== */
-  .devs{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-  .dev{ position:relative; border-radius:18px; padding:16px 18px; min-height:190px;
-    background:linear-gradient(160deg, rgba(30,44,80,.7), rgba(14,22,46,.7)); border:1px solid var(--stroke);
-    box-shadow:0 10px 34px rgba(10,20,50,.5), inset 0 1px 0 rgba(255,255,255,.06); backdrop-filter:blur(6px); overflow:hidden; }
-  .dev .top{ display:flex; align-items:center; gap:12px; }
-  .dev .ic{ width:54px;height:54px;border-radius:14px; display:flex;align-items:center;justify-content:center; font-size:30px;
-    background:linear-gradient(135deg, rgba(60,140,255,.25), rgba(60,140,255,.05)); border:1px solid rgba(90,150,255,.3); box-shadow:0 0 18px rgba(50,130,255,.25);}
-  .dev .nm{ flex:1; } .dev .nm .model{ font-size:17px; font-weight:800; } .dev .nm .os{ font-size:12px; color:var(--muted); margin-top:2px; }
-  .rowb{ margin-top:14px; } .rowb .lab{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:5px; } .rowb .lab b{ color:#fff; font-size:13px; }
-  .bar{ height:12px; border-radius:7px; background:rgba(255,255,255,.08); overflow:hidden; } .bar i{ display:block; height:100%; border-radius:7px; width:0; transition:width .5s; }
-  .bar i.g{ background:linear-gradient(90deg,#1f9c4d,#3fe06b); box-shadow:0 0 10px rgba(50,210,100,.6);}
-  .bar i.b{ background:linear-gradient(90deg,#1f6feb,#51a6ff); box-shadow:0 0 10px rgba(60,140,255,.6);}
-  .dev .det{ position:absolute; bottom:12px; left:16px; right:16px; text-align:center; font-size:12px; color:#bcd4ff; padding:7px; border-radius:9px; cursor:pointer;
-    background:rgba(255,255,255,.04); border:1px solid rgba(90,150,255,.25); }
-  .tiles{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:14px; }
-  .tile{ cursor:pointer; border-radius:16px; padding:16px 8px; text-align:center; color:#fff; border:1px solid rgba(255,255,255,.12); transition:.15s;
-    box-shadow:0 8px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12); }
-  .tile:hover{ transform:translateY(-3px); filter:brightness(1.1); } .tile .i{ font-size:26px; } .tile .l{ margin-top:8px; font-size:13px; font-weight:800; }
-  .t1{ background:linear-gradient(135deg,#8140e0,#5a23a6);} .t2{ background:linear-gradient(135deg,#1fb85f,#117a43);} .t3{ background:linear-gradient(135deg,#2f8bff,#1456c4);}
-  .t4{ background:linear-gradient(135deg,#f0912e,#c25e14);} .t5{ background:linear-gradient(135deg,#f0387f,#b41e63);}
-  .bottom{ display:grid; grid-template-columns:1fr 220px 250px; gap:14px; }
-  .panel{ border-radius:16px; padding:14px 16px; min-height:240px; background:var(--card); border:1px solid var(--stroke);
-    box-shadow:0 8px 26px rgba(10,20,50,.4), inset 0 1px 0 rgba(255,255,255,.05); backdrop-filter:blur(6px); }
-  .panel h3{ font-size:14px; color:#bcd6ff; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-  .op{ font-size:13px; margin-bottom:12px; padding-right:6px; border-right:3px solid var(--green); } .op .tm{ color:var(--muted); font-size:11px; margin-top:2px; }
-  .sys{ text-align:center; } .sys .big{ font-size:46px; margin:10px 0; } .sys .st{ font-size:17px; font-weight:800; } .sys .sub{ font-size:12px; color:var(--muted); margin-top:4px; }
-  .qbtn{ display:flex; align-items:center; gap:10px; width:100%; cursor:pointer; border:1px solid rgba(90,150,255,.3); border-radius:11px; padding:12px 12px; margin-bottom:11px;
-    color:#fff; font-size:13px; font-weight:700; font-family:inherit; background:linear-gradient(135deg, rgba(30,60,120,.5), rgba(18,30,60,.5)); transition:.15s; }
-  .qbtn:hover{ filter:brightness(1.15); transform:translateY(-1px); }
+  .v13foot{ display:flex; justify-content:space-between; align-items:center; margin-top:18px; padding:11px 6px; font-size:12px; color:#7f97c0; border-top:1px solid rgba(60,110,190,.22); }
 
-  /* ===== TRANSFER ===== */
+  /* ===== hidden compat spans ===== */
+  #sysIcon,#sysSt,#sysSub,#ops{ display:none; }
+
+  /* ===================== TRANSFER (kept) ===================== */
+  .hdr{ display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:16px; margin-bottom:14px;
+    background:linear-gradient(120deg, rgba(14,40,90,.8), rgba(30,100,190,.55)); border:1px solid var(--stroke);
+    box-shadow:0 8px 30px rgba(20,90,200,.25), inset 0 1px 0 rgba(255,255,255,.08); }
+  .hdr .t{ font-size:18px; font-weight:800; display:flex; align-items:center; gap:10px; }
+  .hdr .t .dot{ width:12px;height:12px;border-radius:50%;background:var(--green); box-shadow:0 0 12px var(--green);}
   .xmain{ display:grid; grid-template-columns:1fr 320px; gap:14px; }
   .xbridge{ border-radius:18px; padding:18px; background:linear-gradient(160deg, rgba(20,40,80,.6), rgba(12,20,44,.7)); border:1px solid var(--stroke);
     box-shadow:0 10px 34px rgba(10,20,50,.5), inset 0 1px 0 rgba(255,255,255,.06); }
@@ -167,8 +129,8 @@
   .phone .scr{ width:120px; height:180px; margin:0 auto; border-radius:18px; border:3px solid rgba(90,150,255,.5);
     background:linear-gradient(160deg,#1a2650,#0f1836); box-shadow:0 0 24px rgba(50,130,255,.3); position:relative; }
   .phone .scr::before{ content:""; position:absolute; top:8px; left:50%; transform:translateX(-50%); width:34px; height:5px; border-radius:3px; background:rgba(150,180,255,.5); }
-  .phone .tag{ display:inline-block; margin-top:10px; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:800; color:#fff; }
-  .phone.src .tag{ background:linear-gradient(135deg,#22c35e,#149048); } .phone.dst .tag{ background:linear-gradient(135deg,#22c35e,#149048); }
+  .phone .tag{ display:inline-block; margin-top:10px; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:800; color:#fff;
+    background:linear-gradient(135deg,#22c35e,#149048); }
   .phone select{ display:block; width:100%; margin-top:8px; background:#0a1024; color:#fff; border:1px solid var(--stroke); border-radius:8px; padding:6px; font-size:12px; text-align:center; font-family:inherit; }
   .xarrow{ flex:0 0 90px; text-align:center; color:var(--green); }
   .xarrow .a{ font-size:40px; filter:drop-shadow(0 0 10px rgba(50,220,110,.6)); } .xarrow .u{ font-size:22px; margin-top:4px; }
@@ -196,93 +158,83 @@
   #toast{ position:fixed; bottom:18px; right:50%; transform:translateX(50%); background:rgba(20,40,80,.95); border:1px solid var(--stroke); color:#fff;
     padding:12px 22px; border-radius:12px; font-size:14px; opacity:0; transition:.3s; box-shadow:0 10px 30px rgba(0,0,0,.5); pointer-events:none; }
   #toast.show{ opacity:1; bottom:28px; }
+
+  @media(max-width:860px){ .mgrid,.pills{ grid-template-columns:1fr; } .ptools{ grid-template-columns:repeat(2,1fr); } .xmain{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- ===================== HOME ===================== -->
+  <!-- ===================== HOME (V13.8) ===================== -->
   <div id="view-home" class="view on">
-    <!-- V12 Header -->
-    <div class="v12hdr">
-      <div class="v12brand">
-        <div class="v12logo">
+
+    <div class="brand13">
+      <div class="b13l">
+        <div class="b13logo">
           <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M35 14.5a15 15 0 1 0 0 19" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
             <circle cx="24" cy="24" r="5.2" fill="#fff"/>
           </svg>
         </div>
         <div>
-          <div class="v12name">CENTER POINT <b>V12.0</b></div>
-          <div class="v12tag">Professional Mobile Service Platform · سنتر بوينت للاتصالات</div>
+          <div class="b13name">CENTER POINT <b>V13.8</b></div>
+          <div class="b13tag">Professional Mobile Solutions · برنامج صيانة وإدارة الهواتف الذكي</div>
         </div>
       </div>
-      <div class="v12right">
-        <div class="v12ar">أقوى منصة لصيانة وإدارة الهواتف الذكية</div>
-        <div class="crown">👑</div>
+      <div class="b13r">
+        <div class="b13chip"><span class="d"></span> جاهز للعمل</div>
+        <div class="b13ver">PROFESSIONAL EDITION</div>
       </div>
     </div>
 
-    <!-- Device + Info -->
-    <div class="v12row">
-      <div class="v12dev" id="devs">
-        <div class="devempty">🔌 جاري البحث عن جهاز… اضغط «تحديث» بعد توصيل الهاتف</div>
-      </div>
-      <div class="v12info">
-        <div class="infocard i-green"><div class="ii">🛡</div><div><b>حماية البيانات</b><span>قبل أي عملية</span></div></div>
-        <div class="infocard i-amber"><div class="ii">⚡</div><div><b>سرعة فائقة</b><span>في التنفيذ</span></div></div>
-        <div class="infocard i-blue"><div class="ii">🎧</div><div><b>دعم فني 24/7</b><span>فريق سنتر بوينت</span></div></div>
-      </div>
+    <!-- status pills -->
+    <div class="pills">
+      <div class="pill off" id="pill-adb"><div class="chk">✓</div><div><div class="nm">ADB</div><div class="ps">غير متصل</div></div></div>
+      <div class="pill off" id="pill-fb"><div class="chk">✓</div><div><div class="nm">Fastboot</div><div class="ps">غير متصل</div></div></div>
+      <div class="pill off" id="pill-mtp"><div class="chk">✓</div><div><div class="nm">MTP</div><div class="ps">غير متصل</div></div></div>
     </div>
 
-    <!-- 4 Big Tiles -->
-    <div class="v12big">
-      <div class="bt b-blue" onclick="nav('transfer')"><div class="bi">📲</div><div class="bl">نقل البيانات<span>بين الأجهزة</span></div></div>
-      <div class="bt b-green" onclick="nav('backup')"><div class="bi">☁️</div><div class="bl">النسخ الاحتياطي<span>والاستعادة</span></div></div>
-      <div class="bt b-purple" onclick="nav('fw')"><div class="bi">🛠️</div><div class="bl">الصيانة والفيرموير<span>Smart Recovery</span></div></div>
-      <div class="bt b-orange" onclick="nav('repair')"><div class="bi">🔍</div><div class="bl">التشخيص الذكي<span>وتحديد الأعطال</span></div></div>
-    </div>
-
-    <!-- 6 Small Tiles -->
-    <div class="v12small">
-      <div class="st2" onclick="nav('adb')"><div class="si">🤖</div><div>أدوات أندرويد<span>ADB & Fastboot</span></div></div>
-      <div class="st2" onclick="nav('samsung')"><div class="si">📱</div><div>أدوات سامسونج<span>Service Center</span></div></div>
-      <div class="st2" onclick="nav('info')"><div class="si">🧩</div><div>إدارة الأجهزة<span>وتحديث التعريفات</span></div></div>
-      <div class="st2" onclick="nav('customers')"><div class="si">🏪</div><div>إدارة العملاء<span>والفواتير</span></div></div>
-      <div class="st2" onclick="nav('inventory')"><div class="si">📦</div><div>المخزون<span>والإكسسوارات</span></div></div>
-      <div class="st2" onclick="nav('reports')"><div class="si">📈</div><div>التقارير<span>والإحصائيات</span></div></div>
-    </div>
-
-    <!-- Bottom Panels -->
-    <div class="v12bottom">
-      <div class="vp">
-        <div class="vph"><span>🕒 آخر العمليات</span><a onclick="send('refresh')">تحديث</a></div>
-        <div id="ops"><div class="op">لا توجد عمليات بعد.</div></div>
-      </div>
-      <div class="vp">
-        <div class="vph"><span>📊 إحصائيات سريعة</span></div>
-        <div class="gauges">
-          <div class="gg"><div class="ring g-green"><i>98%</i></div><span>معدل النجاح</span></div>
-          <div class="gg"><div class="ring g-blue"><i>120</i></div><span>عميل نشط</span></div>
-          <div class="gg"><div class="ring g-purple"><i>850+</i></div><span>عملية مكتملة</span></div>
+    <!-- device + transfer -->
+    <div class="mgrid">
+      <div class="glass">
+        <div class="ghead"><div class="gi">📱</div> الجهاز المتصل</div>
+        <div class="gbody" id="devs">
+          <div class="dempty">🔌 جاري البحث عن جهاز…<br>وصّل الهاتف واضغط «تحديث الأجهزة»</div>
         </div>
       </div>
-      <div class="vp">
-        <div class="vph"><span>🔄 مركز التحديثات</span></div>
-        <div class="updbox">
-          <div class="updst">✔ أنت تستخدم أحدث إصدار</div>
-          <div class="updver">CENTER POINT V12.0</div>
-          <button class="updbtn" onclick="nav('settings')">التحقق من التحديثات</button>
+      <div class="glass">
+        <div class="ghead"><div class="gi">⚡</div> نقل البيانات بسرعة فائقة</div>
+        <div class="gbody">
+          <div class="trow"><span class="k">📄 الملفات المنقولة</span><span class="v" id="hv-files">— <small>GB</small></span></div>
+          <div class="trow"><span class="k">⚡ السرعة</span><span class="v" id="hv-speed">— <small>MB/s</small></span></div>
+          <div class="ttrack"><i id="hv-fill"></i></div>
+          <div class="tpct" id="hv-pct">جاهز للنقل</div>
+          <div class="trow" style="margin-top:12px"><span class="k">⏱ الوقت المتبقي</span><span class="v" id="hv-eta">—</span></div>
+          <div class="tbtns">
+            <button class="btn g" onclick="nav('transfer')">▶ بدء النقل</button>
+            <button class="btn ghost" onclick="send('openReport')">📊 التقرير</button>
+          </div>
         </div>
       </div>
     </div>
-    <div class="v12foot">
-      <span>● CENTER POINT V12.0 · Build 2026.11</span>
-      <span>Innovation · Performance · Reliability</span>
+
+    <!-- pro tools -->
+    <div class="ptitle">أدوات احترافية</div>
+    <div class="ptools">
+      <div class="ptool pc-green" onclick="nav('backup')"><div class="pi">💾</div><div class="pl">نسخ احتياطي</div></div>
+      <div class="ptool pc-cyan" onclick="nav('backup')"><div class="pi">↩️</div><div class="pl">استعادة</div></div>
+      <div class="ptool pc-purple" onclick="nav('fw')"><div class="pi">🧩</div><div class="pl">تفليش (Firmware)</div></div>
+      <div class="ptool pc-blue" onclick="nav('repair')"><div class="pi">🔧</div><div class="pl">إصلاح النظام</div></div>
+      <div class="ptool pc-orange" onclick="nav('transfer')"><div class="pi">📲</div><div class="pl">نقل بين هاتفين</div></div>
+    </div>
+
+    <div class="v13foot">
+      <span>● CENTER POINT V13.8 · Professional Edition</span>
+      <span>أداء أعلى · سرعة أكبر · استقرار أفضل</span>
       <span>🐙 zerocoolqi5/center-point</span>
     </div>
 
-    <span id="sysIcon" style="display:none"></span><span id="sysSt" style="display:none"></span><span id="sysSub" style="display:none"></span>
+    <span id="sysIcon"></span><span id="sysSt"></span><span id="sysSub"></span><div id="ops"></div>
   </div>
 
   <!-- ===================== TRANSFER ===================== -->
@@ -354,38 +306,44 @@ function showView(name){
 /* ---------- HOME ---------- */
 function devCard(d){
   if(!d) return '';
-  var icon = d.kind==='ios' ? '🍎' : (d.kind==='mtp' ? '📟' : '🤖');
-  var mode = d.kind==='ios' ? 'Apple' : (d.kind==='mtp' ? 'MTP' : 'ADB 3.0');
-  var batTxt = d.battery>=0 ? d.battery+'%' : '—';
-  var space = d.storeTotal>0 ? (Math.max(0,d.storeTotal-d.storeUsed)).toFixed(0)+' GB' : '—';
-  return '<div class="devtop">'+
-    '<div class="devph">'+icon+'</div>'+
-    '<div class="devmain">'+
-      '<div class="devok">✔ الجهاز متصل</div>'+
-      '<div class="devmodel">'+esc(d.model||'جهاز')+'</div>'+
-      '<div class="devos">'+esc(d.os||mode)+'</div>'+
-    '</div>'+
-    '<div class="devstats">'+
-      '<div class="ds"><span>🔋 البطارية</span><b>'+batTxt+'</b></div>'+
-      '<div class="ds"><span>💾 المساحة المتاحة</span><b>'+space+'</b></div>'+
-      '<div class="ds"><span>🔌 الاتصال</span><b class="ok">'+esc(mode)+'</b></div>'+
+  var em = d.kind==='ios' ? '🍎' : (d.kind==='mtp' ? '📟' : '📱');
+  var mode = d.kind==='ios' ? 'Apple' : (d.kind==='mtp' ? 'MTP' : 'ADB');
+  var usb = d.kind==='mtp' ? 'MTP (نقل ملفات)' : (d.kind==='ios' ? 'Apple USB' : 'USB — High-Speed');
+  var and = d.os ? esc(d.os) : (d.kind==='ios'?'iOS':'Android');
+  var bat = d.battery>=0 ? d.battery+'%' : '—';
+  var space = d.storeTotal>0 ? (Math.max(0,d.storeTotal-d.storeUsed)).toFixed(0)+' GB متاح / '+d.storeTotal+' GB' : '—';
+  var serial = d.serial ? esc(d.serial) : (d.id ? esc(d.id) : '—');
+  return '<div class="dtop">'+
+    '<div class="dph"><div class="em">'+em+'</div></div>'+
+    '<div class="dmain">'+
+      '<div class="dmodel">'+esc(d.model||'جهاز')+'</div>'+
+      '<div class="dand">🤖 '+and+'</div>'+
+      '<div class="dmeta">'+
+        '<b>الاتصال:</b> '+esc(mode)+' · '+usb+'<br>'+
+        '<b>السيريال:</b> '+serial+'<br>'+
+        '<b>البطارية:</b> '+bat+' · <b>المساحة:</b> '+space+
+      '</div>'+
+      '<div class="dready">✔ الجهاز متصل وجاهز</div>'+
     '</div>'+
   '</div>';
 }
+function setPill(id, on, label){
+  var el=document.getElementById(id); if(!el) return;
+  el.className = 'pill '+(on?'ok':'off');
+  var ps=el.querySelector('.ps'); if(ps) ps.textContent = on ? 'متصل' : 'غير متصل';
+}
 function renderDevices(list){
-  var html = (list||[]).map(devCard).join('');
-  document.getElementById('devs').innerHTML = html || '<div class="devempty">🔌 لا يوجد جهاز متصل — وصّل الهاتف واضغط «تحديث».</div>';
-  var n=(list||[]).length;
-  var si=document.getElementById('sysIcon'), ss=document.getElementById('sysSt'), su=document.getElementById('sysSub');
-  if(si) si.textContent = n>0?'✅':'⏳';
-  if(ss) ss.textContent = n>0?'الأداء ممتاز':'بانتظار جهاز';
-  if(su) su.textContent = n>0?('('+n+' جهاز متصل)'):'';
+  list = list||[];
+  var html = list.map(devCard).join('');
+  document.getElementById('devs').innerHTML = html || '<div class="dempty">🔌 لا يوجد جهاز متصل —<br>وصّل الهاتف واضغط «تحديث الأجهزة».</div>';
+  var hasAdb = list.some(function(d){return d.kind==='android';});
+  var hasMtp = list.some(function(d){return d.kind==='mtp';});
+  var hasFb  = list.some(function(d){return d.kind==='fastboot';});
+  setPill('pill-adb', hasAdb);
+  setPill('pill-fb', hasFb);
+  setPill('pill-mtp', hasMtp);
 }
-function renderOps(list){
-  var el=document.getElementById('ops');
-  if(!list||!list.length){ el.innerHTML='<div class="op">لا توجد عمليات بعد.</div>'; return; }
-  el.innerHTML=list.map(function(o){ return '<div class="op">✔ '+esc(o.text)+'<div class="tm">'+esc(o.time)+'</div></div>'; }).join('');
-}
+function renderOps(list){ /* متوافق — السجل يظهر في قسم التقارير */ }
 
 /* ---------- TRANSFER ---------- */
 var XCATS = [
@@ -462,6 +420,10 @@ function setXProg(p){
   document.getElementById('xcount').innerHTML=(p.done||0)+' <small>✓</small>';
   if(p.speed) document.getElementById('xspeed').innerHTML=p.speed+' <small>MB/s</small>';
   var eta=p.eta||0; document.getElementById('xeta').textContent = eta>0 ? ('المتبقّي ~'+(eta>=60?(Math.round(eta/60)+' دقيقة'):(eta+' ثانية'))) : '—';
+  // مرآة مختصرة على الرئيسية
+  var hf=document.getElementById('hv-fill'); if(hf) hf.style.width=(p.pct||0)+'%';
+  var hp=document.getElementById('hv-pct'); if(hp) hp.textContent=(p.status||'')+' '+(p.pct||0)+'%';
+  var hs=document.getElementById('hv-speed'); if(hs&&p.speed) hs.innerHTML=p.speed+' <small>MB/s</small>';
 }
 
 var toastT;
