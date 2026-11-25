@@ -115,8 +115,15 @@ namespace CenterPoint
                         dynamic sh = ShellApp();
                         dynamic devItem = MtpDeviceItemByName(sh, dev.Model);
                         if (devItem == null) { msg = "جهاز MTP غير موجود — تأكد من وضع «نقل الملفات»."; ok = false; return; }
+                        // نفرّق بين «تخزين غير متاح» (فشل) و«المجلد غير موجود» (فارغ شرعي)
+                        dynamic root = MtpStorageRoot(devItem.GetFolder);
+                        if (root == null)
+                        {
+                            msg = "تعذّر الوصول إلى تخزين الجهاز عبر MTP (قد يكون الهاتف مقفلاً أو بوضع «شحن فقط»). افتح قفل الهاتف واختر «نقل الملفات» ثم أعد المحاولة.";
+                            ok = false; return;   // ليست نتيجة فارغة ناجحة — بل فشل وصول
+                        }
                         dynamic src = MtpNavigate(devItem.GetFolder, androidPath, false);
-                        if (src == null) { ok = true; msg = "فارغ"; return; } // المجلد غير موجود = فارغ، ليس فشلاً
+                        if (src == null) { ok = true; msg = "المجلد غير موجود على الجهاز (لا توجد ملفات من هذا النوع)"; return; } // المجلد فعلاً غير موجود = فارغ شرعي
                         Directory.CreateDirectory(local);
                         MtpCopyFolderOut(sh, src, local);
                         ok = true;
