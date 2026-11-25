@@ -100,12 +100,20 @@ namespace CenterPoint
                     resp.EnsureSuccessStatusCode();
                     string json = await resp.Content.ReadAsStringAsync();
 
-                    string tag = "", htmlUrl = "";
+                    string tag = "", htmlUrl = "", exeUrl = "";
                     using (var doc = JsonDocument.Parse(json))
                     {
                         var root = doc.RootElement;
                         if (root.TryGetProperty("tag_name", out var t)) tag = t.GetString() ?? "";
                         if (root.TryGetProperty("html_url", out var h)) htmlUrl = h.GetString() ?? "";
+                        // ابحث عن ملف exe ضمن مرفقات الإصدار للتحديث التلقائي
+                        if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
+                            foreach (var a in assets.EnumerateArray())
+                            {
+                                string nm = a.TryGetProperty("name", out var an) ? (an.GetString() ?? "") : "";
+                                if (nm.ToLowerInvariant().EndsWith(".exe") && a.TryGetProperty("browser_download_url", out var du))
+                                { exeUrl = du.GetString() ?? ""; break; }
+                            }
                     }
                     string latest = (tag ?? "").TrimStart('v', 'V').Trim();
                     if (latest == "")
@@ -117,11 +125,20 @@ namespace CenterPoint
                     if (IsNewer(latest, cur))
                     {
                         CpLog("INFO", "تحديث متوفّر: " + latest + " (الحالي " + cur + ")");
-                        if (MessageBox.Show("يتوفّر إصدار جديد: " + latest + "\r\nالإصدار الحالي: " + cur + "\r\n\r\nفتح صفحة التحميل الآن؟",
-                            "تحديث متوفّر", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        if (exeUrl != "")
                         {
-                            string open = htmlUrl != "" ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest";
-                            try { Process.Start(new ProcessStartInfo { FileName = open, UseShellExecute = true }); } catch { }
+                            var ch = MessageBox.Show("يتوفّر إصدار جديد: " + latest + "\r\nالإصدار الحالي: " + cur +
+                                "\r\n\r\nنعم = تحديث تلقائي كامل (يُغلق البرنامج، يُحدّث، ويُعاد فتحه)\r\nلا = فتح صفحة التحميل يدوياً",
+                                "تحديث متوفّر", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
+                            if (ch == DialogResult.Yes) { await DownloadAndInstall(exeUrl, latest, htmlUrl); return; }
+                            if (ch == DialogResult.No) OpenUrl(htmlUrl != "" ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
+                        }
+                        else
+                        {
+                            // لا يوجد مرفق exe — افتح الصفحة
+                            if (MessageBox.Show("يتوفّر إصدار جديد: " + latest + "\r\nالإصدار الحالي: " + cur + "\r\n\r\nفتح صفحة التحميل الآن؟ (لا يوجد ملف تثبيت مباشر في الإصدار)",
+                                "تحديث متوفّر", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                                OpenUrl(htmlUrl != "" ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
                         }
                     }
                     else if (!silent)
@@ -164,6 +181,67 @@ namespace CenterPoint
                 int.TryParse(digits, out val); r[i] = val;
             }
             return r;
+        }
+
+        void OpenUrl(string url)
+        {
+            try { Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }); } catch { }
+        }
+
+        // ===== تحديث تلقائي كامل: تنزيل الـexe الجديد واستبداله عبر سكربت ثم إعادة التشغيل =====
+        async System.Threading.Tasks.Task DownloadAndInstall(string exeUrl, string version, string htmlUrl)
+        {
+            string exePath;
+            try { exePath = Process.GetCurrentProcess().MainModule.FileName; }
+            catch { exePath = Application.ExecutablePath; }
+
+            // يعمل فقط على ملف exe (النشر single-file). في وضع التطوير نفتح الصفحة بدل ذلك.
+            if (string.IsNullOrEmpty(exePath) || !exePath.ToLowerInvariant().EndsWith(".exe"))
+            {
+                OpenUrl(htmlUrl != "" ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
+                return;
+            }
+
+            string tmpNew = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "CenterPoint-Transfer-" + version + ".exe");
+            try
+            {
+                try { baseTitle = "CENTER POINT — جاري تنزيل التحديث..."; Text = baseTitle; } catch { }
+                CpLog("INFO", "بدء تنزيل تحديث: " + version);
+                using (var http = new HttpClient())
+                {
+                    http.Timeout = TimeSpan.FromMinutes(15);
+                    http.DefaultRequestHeaders.Add("User-Agent", "CenterPoint-Updater");
+                    var bytes = await http.GetByteArrayAsync(exeUrl);
+                    System.IO.File.WriteAllBytes(tmpNew, bytes);
+                }
+                if (new System.IO.FileInfo(tmpNew).Length < 1024 * 100)
+                    throw new Exception("ملف التحديث صغير/تالف.");
+
+                // سكربت يستبدل الملف بعد إغلاق البرنامج ثم يعيد التشغيل
+                int pid = Process.GetCurrentProcess().Id;
+                string bat = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "cp_update.bat");
+                var sb = new StringBuilder();
+                sb.AppendLine("@echo off");
+                sb.AppendLine("chcp 65001 >nul");
+                sb.AppendLine(":wait");
+                sb.AppendLine("tasklist /fi \"PID eq " + pid + "\" | find \"" + pid + "\" >nul && (ping -n 2 127.0.0.1 >nul & goto wait)");
+                sb.AppendLine("ping -n 2 127.0.0.1 >nul");
+                sb.AppendLine("copy /y \"" + tmpNew + "\" \"" + exePath + "\" >nul");
+                sb.AppendLine("start \"\" \"" + exePath + "\"");
+                sb.AppendLine("del \"%~f0\"");
+                System.IO.File.WriteAllText(bat, sb.ToString(), new System.Text.UTF8Encoding(false));
+
+                CpLog("INFO", "تثبيت التحديث " + version + " وإعادة التشغيل");
+                Process.Start(new ProcessStartInfo { FileName = bat, UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden });
+                try { Application.Exit(); } catch { }
+                try { Environment.Exit(0); } catch { }
+            }
+            catch (Exception ex)
+            {
+                try { baseTitle = "CENTER POINT TRANSFER V12.0.0 PRO - سنتر بوينت"; Text = baseTitle; } catch { }
+                ErrBox("تعذّر التحديث التلقائي: " + ex.Message + "\r\nيمكنك التحميل يدوياً من صفحة الإصدار.");
+                OpenUrl(htmlUrl != "" ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
+            }
         }
     }
 }
