@@ -27,31 +27,48 @@ namespace CenterPoint
             catch { return "0.0.0"; }
         }
 
-        // ===== إعداد التحديث التلقائي (مفعّل افتراضياً) =====
-        bool _autoUpdateLoaded = false, _autoUpdate = true;
-        string AutoUpdatePath { get { return System.IO.Path.Combine(ExportsDir, "app_settings.json"); } }
+        // ===== الإعدادات المحلية (تبقى على كل جهاز): التحديث التلقائي + مجلد البيانات المشترك =====
+        bool _settingsLoaded = false, _autoUpdate = true;
+        string _dataDir = "";
+        // app_settings.json محلي دائماً (يحمل إعداد مجلد البيانات نفسه) — لا يُنقل للمجلد المشترك
+        string AutoUpdatePath { get { return System.IO.Path.Combine(LocalExportsDir, "app_settings.json"); } }
 
         bool AutoUpdateEnabled
         {
-            get { if (!_autoUpdateLoaded) LoadAutoUpdate(); return _autoUpdate; }
-            set { _autoUpdate = value; _autoUpdateLoaded = true; SaveAutoUpdate(); }
+            get { if (!_settingsLoaded) LoadSettings(); return _autoUpdate; }
+            set { _autoUpdate = value; _settingsLoaded = true; SaveSettings(); }
         }
 
-        void LoadAutoUpdate()
+        // مجلد البيانات المشترك (OneDrive/شبكة). فارغ = الافتراضي المحلي.
+        string DataFolder
         {
-            _autoUpdateLoaded = true;
+            get { if (!_settingsLoaded) LoadSettings(); return _dataDir; }
+            set { _dataDir = value ?? ""; _settingsLoaded = true; SaveSettings(); }
+        }
+
+        void LoadSettings()
+        {
+            _settingsLoaded = true;
             try
             {
                 if (System.IO.File.Exists(AutoUpdatePath))
                     using (var doc = JsonDocument.Parse(System.IO.File.ReadAllText(AutoUpdatePath)))
+                    {
                         if (doc.RootElement.TryGetProperty("autoUpdate", out var v)) _autoUpdate = v.GetBoolean();
+                        if (doc.RootElement.TryGetProperty("dataDir", out var dd)) _dataDir = dd.GetString() ?? "";
+                    }
             }
             catch { }
         }
 
-        void SaveAutoUpdate()
+        void SaveSettings()
         {
-            try { System.IO.File.WriteAllText(AutoUpdatePath, "{\"autoUpdate\":" + (_autoUpdate ? "true" : "false") + "}", new System.Text.UTF8Encoding(false)); }
+            try
+            {
+                string json = "{\"autoUpdate\":" + (_autoUpdate ? "true" : "false") +
+                              ",\"dataDir\":" + System.Text.Json.JsonSerializer.Serialize(_dataDir ?? "") + "}";
+                System.IO.File.WriteAllText(AutoUpdatePath, json, new System.Text.UTF8Encoding(false));
+            }
             catch { }
         }
 

@@ -42,7 +42,7 @@ namespace CenterPoint
         List<InvItem> ivCurrentItems = new List<InvItem>();
         List<Invoice> invoiceList = new List<Invoice>(); string ivEditId = "";
 
-        string InvoicesPath { get { return Path.Combine(ExportsDir, "invoices.json"); } }
+        string InvoicesPath { get { return Path.Combine(DataDir, "invoices.json"); } }
 
         void BuildInvoicesPage()
         {

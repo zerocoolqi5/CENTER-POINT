@@ -41,28 +41,101 @@ namespace CenterPoint
             StBtn("⚠ سجل الأخطاء", 20, 268, 335, CARD, () => StOpenFile(Path.Combine(ExportsDir, "errors.log")));
             StBtn("🗒 السجل المركزي (center.log)", 363, 268, 332, CARD, () => StOpenFile(Path.Combine(ExportsDir, "center.log")));
 
-            StLbl("الشبكة", 316);
+            StLbl("مزامنة البيانات بين الأجهزة", 316);
+            stDataLbl = new Label
+            {
+                Text = "", ForeColor = Color.FromArgb(180, 230, 200), BackColor = Color.FromArgb(16, 24, 44),
+                Location = new Point(20, 346), Size = new Size(675, 24), TextAlign = ContentAlignment.MiddleRight,
+                Font = new Font("Arial", 9, FontStyle.Bold), Padding = new Padding(10, 0, 10, 0)
+            };
+            pageSettings.Controls.Add(stDataLbl);
+            RefreshDataFolderLabel();
+            StBtn("📂 تعيين مجلد مشترك (OneDrive/شبكة)", 20, 374, 335, Color.FromArgb(35, 115, 75), () => SetDataFolder());
+            StBtn("↩ رجوع للمجلد المحلي", 363, 374, 332, CARD, () => ResetDataFolder());
+
+            StLbl("الشبكة", 414);
             var net = new Label
             {
-                Text = "البرنامج يعمل بدون إنترنت. أزرار «التنزيل» و«البحث عن الروم» و«فحص التحديثات» تحتاج اتصالاً فقط. لا تُرسل أي بيانات خارج الجهاز.",
-                ForeColor = Color.FromArgb(200, 215, 240), BackColor = Color.FromArgb(16, 24, 44), Location = new Point(20, 346), Size = new Size(675, 42),
+                Text = "البرنامج يعمل بدون إنترنت. «التنزيل» و«البحث عن الروم» و«فحص التحديثات» تحتاج اتصالاً فقط.",
+                ForeColor = Color.FromArgb(200, 215, 240), BackColor = Color.FromArgb(16, 24, 44), Location = new Point(20, 442), Size = new Size(675, 34),
                 TextAlign = ContentAlignment.MiddleRight, Font = new Font("Arial", 9), Padding = new Padding(10, 0, 10, 0)
             };
             pageSettings.Controls.Add(net);
 
-            StLbl("عن البرنامج", 400);
+            StLbl("عن البرنامج", 486);
             var about = new Label
             {
-                Text = "CENTER POINT PROFESSIONAL — V12.0.0\r\n" +
+                Text = "CENTER POINT PROFESSIONAL — V12.1.0\r\n" +
                        "سنتر بوينت للاتصالات\r\n" +
-                       "نقل البيانات + صيانة الأجهزة + التفليش + إدارة المحل\r\n\r\n" +
                        "واتساب / هاتف:  0782 915 5923\r\n" +
-                       "فيسبوك:  facebook.com/centerpoint\r\n\r\n" +
-                       "⛔ البرنامج أدوات تشخيص وإرشاد وإدارة — لا يتجاوز أقفال الحسابات (FRP / iCloud).",
-                ForeColor = Color.FromArgb(205, 220, 245), BackColor = Color.FromArgb(10, 16, 32), Location = new Point(20, 430), Size = new Size(675, 212),
+                       "⛔ أدوات تشخيص وإرشاد وإدارة — لا يتجاوز أقفال الحسابات (FRP / iCloud).",
+                ForeColor = Color.FromArgb(205, 220, 245), BackColor = Color.FromArgb(10, 16, 32), Location = new Point(20, 514), Size = new Size(675, 132),
                 TextAlign = ContentAlignment.TopRight, Font = new Font("Consolas", 11), Padding = new Padding(14, 12, 14, 12)
             };
             pageSettings.Controls.Add(about);
+        }
+
+        Label stDataLbl;
+
+        void RefreshDataFolderLabel()
+        {
+            if (stDataLbl == null) return;
+            string d = DataFolder;
+            stDataLbl.Text = "المجلد الحالي: " + (string.IsNullOrWhiteSpace(d) ? "محلي (Documents\\CenterPoint Transfer\\exports)" : d);
+        }
+
+        // تعيين مجلد مشترك + نسخ البيانات الحالية إليه + إعادة تحميلها
+        void SetDataFolder()
+        {
+            using (var dlg = new FolderBrowserDialog { Description = "اختر مجلداً مشتركاً (OneDrive / قرص شبكة) لحفظ بيانات المحل" })
+            {
+                try { if (!string.IsNullOrWhiteSpace(DataFolder) && Directory.Exists(DataFolder)) dlg.SelectedPath = DataFolder; } catch { }
+                if (dlg.ShowDialog() != DialogResult.OK) return;
+                string target = dlg.SelectedPath;
+                if (string.IsNullOrWhiteSpace(target)) return;
+                string[] files = { "customers.json", "invoices.json", "inventory.json", "tickets.json", "firmware_lib.json", "vendor_tools.json", "flash_log.json" };
+                int copied = 0;
+                try
+                {
+                    Directory.CreateDirectory(target);
+                    string cur = DataDir; // المجلد المستخدم حالياً
+                    if (!string.Equals(Path.GetFullPath(cur), Path.GetFullPath(target), StringComparison.OrdinalIgnoreCase))
+                        foreach (var fn in files)
+                        {
+                            string src = Path.Combine(cur, fn), dst = Path.Combine(target, fn);
+                            try { if (File.Exists(src) && !File.Exists(dst)) { File.Copy(src, dst); copied++; } } catch { }
+                        }
+                }
+                catch (Exception ex) { MessageBox.Show("تنبيه أثناء التحضير: " + ex.Message); }
+                DataFolder = target;
+                RefreshDataFolderLabel();
+                ReloadAllData();
+                MessageBox.Show("تم ضبط مجلد البيانات المشترك:\r\n" + target +
+                    (copied > 0 ? "\r\n\r\nنُسخت " + copied + " ملف بيانات إليه." : "") +
+                    "\r\n\r\nضع نفس المجلد (أو نفس حساب OneDrive) على بقية الأجهزة لتتزامن البيانات.",
+                    "المزامنة", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        void ResetDataFolder()
+        {
+            if (MessageBox.Show("الرجوع للمجلد المحلي؟ البيانات في المجلد المشترك تبقى كما هي، لكن هذا الجهاز لن يعود يستخدمها.",
+                "تأكيد", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            DataFolder = "";
+            RefreshDataFolderLabel();
+            ReloadAllData();
+            MessageBox.Show("رجعت البيانات للمجلد المحلي الافتراضي.", "المزامنة", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        // إعادة تحميل كل البيانات من المجلد الحالي (بعد تبديل المجلد)
+        void ReloadAllData()
+        {
+            try { CustomersLoad(); } catch { }
+            try { InvoicesLoad(); } catch { }
+            try { InventoryLoad(); } catch { }
+            try { TicketsLoad(); } catch { }
+            try { FwLibLoad(); } catch { }
+            try { FlashLogLoad(); } catch { }
         }
 
         void StLbl(string text, int y)

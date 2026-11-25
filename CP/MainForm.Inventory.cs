@@ -29,7 +29,7 @@ namespace CenterPoint
         TextBox ptName, ptSku, ptQty, ptMin, ptPrice, ptNote; ListBox ptList;
         List<Part> partList = new List<Part>(); string ptEditId = "";
 
-        string InventoryPath { get { return Path.Combine(ExportsDir, "inventory.json"); } }
+        string InventoryPath { get { return Path.Combine(DataDir, "inventory.json"); } }
 
         void BuildInventoryPage()
         {

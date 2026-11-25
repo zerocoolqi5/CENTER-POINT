@@ -608,7 +608,22 @@ namespace CenterPoint
 
         string AppDir { get { return AppDomain.CurrentDomain.BaseDirectory; } }
         // مجلد بيانات دائم خارج مجلد البرنامج (لا يُحذف عند إزالة البرنامج)
-        string ExportsDir { get { var p = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CenterPoint Transfer", "exports"); try { Directory.CreateDirectory(p); } catch { } return p; } }
+        // مجلد محلي دائماً (السجلات، التقارير، app_settings)
+        string LocalExportsDir { get { var p = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CenterPoint Transfer", "exports"); try { Directory.CreateDirectory(p); } catch { } return p; } }
+        string ExportsDir { get { return LocalExportsDir; } }
+        // مجلد البيانات: المشترك (OneDrive/شبكة) إن ضُبط وصالح، وإلا المحلي — تتزامن بيانات المحل بين الأجهزة
+        string DataDir
+        {
+            get
+            {
+                string d = DataFolder;
+                if (!string.IsNullOrWhiteSpace(d))
+                {
+                    try { Directory.CreateDirectory(d); if (Directory.Exists(d)) return d; } catch { }
+                }
+                return LocalExportsDir;
+            }
+        }
 
         // تسجيل نص قابل للترجمة
         void Tr(Control c, string ar, string en) { i18n.Add((c, ar, en)); c.Text = Lang == "ar" ? ar : en; }

@@ -27,7 +27,7 @@ namespace CenterPoint
         TextBox cuName, cuPhone, cuNote; ListBox cuList;
         List<Customer> customerList = new List<Customer>(); string cuEditId = "";
 
-        string CustomersPath { get { return Path.Combine(ExportsDir, "customers.json"); } }
+        string CustomersPath { get { return Path.Combine(DataDir, "customers.json"); } }
 
         void BuildCustomersPage()
         {
