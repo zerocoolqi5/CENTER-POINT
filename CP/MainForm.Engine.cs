@@ -491,12 +491,12 @@ namespace CenterPoint
         void Transfer(Device s, Device d, List<string> sel)
         {
             string tmp = Path.Combine(Path.GetTempPath(), "cp_" + Guid.NewGuid().ToString("N").Substring(0, 8));
-            Directory.CreateDirectory(tmp);
-            var t0 = DateTime.Now;
-            xStart = t0; xTotal = 0; xDone = 0; xBytes = 0; xferCancel = false;
-            Log(""); Log("من " + s.Model + "  ←  إلى " + d.Model + "  (" + t0.ToString("HH:mm:ss") + ")");
             try
             {
+                Directory.CreateDirectory(tmp);
+                var t0 = DateTime.Now;
+                xStart = t0; xTotal = 0; xDone = 0; xBytes = 0; xferCancel = false;
+                Log(""); Log("من " + s.Model + "  ←  إلى " + d.Model + "  (" + t0.ToString("HH:mm:ss") + ")");
                 // === المحرّك الموحّد: يكتشف مسار كل جهاز تلقائياً ويوجّه عبره (ADB / MTP / Apple) ===
                 Log("🔀 المحرّك الموحّد — تحديد المسار تلقائياً لكل جهاز...");
                 string sEng = s.Kind == "ios" ? "ios" : (s.Kind == "mtp" ? "mtp" : "adb");

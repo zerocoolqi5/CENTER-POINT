@@ -2179,7 +2179,7 @@ namespace CenterPoint
             else if (cmd == "nav") { string pg = page; BeginInvoke(new Action(() => ShowPage(pg))); }
             else if (cmd == "quick") { RunQuick(kind); }
             else if (cmd == "startTransfer") StartTransferWeb(src, dst, catList);
-            else if (cmd == "cancelTransfer") xferCancel = true;
+            else if (cmd == "cancelTransfer") CancelTransfer();
             else if (cmd == "refreshXfer") { Refresh2(() => SendXferDevices()); }
             else if (cmd == "openReport") OpenLastReport();
         }
@@ -2206,6 +2206,25 @@ namespace CenterPoint
             }
         }
         void EndOp() { lock (opLock) { opBusy = false; opName = ""; } }
+
+        // إلغاء/استعادة مضمونة: يوقف النقل ويحرّر القفل فوراً حتى لو كان الخيط معلّقاً (مثلاً كتابة MTP محجوبة)
+        void CancelTransfer()
+        {
+            xferCancel = true;
+            EndOp();   // تحرير القفل فوراً كي لا يبقى عالقاً للأبد
+            try { PostXfer("✖ أُلغيت العملية"); } catch { }
+            try { PostWeb(JsonSerializer.Serialize(new { type = "xdone", status = "✖ أُلغيت العملية", done = 0, toast = "أُلغيت العملية وحُرّر القفل." })); } catch { }
+            try
+            {
+                if (btnStart != null)
+                {
+                    if (btnStart.InvokeRequired) btnStart.BeginInvoke(new Action(() => { btnStart.Enabled = true; btnStart.Text = "▶  ابدأ النقل"; }));
+                    else { btnStart.Enabled = true; btnStart.Text = "▶  ابدأ النقل"; }
+                }
+            }
+            catch { }
+            try { CpLog("OP", "أُلغيت عملية النقل يدوياً وحُرّر القفل"); } catch { }
+        }
 
         void OpenLastReport()
         {
