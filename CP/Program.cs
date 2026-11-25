@@ -357,9 +357,11 @@ namespace CenterPoint
         {
             if (d == null || string.IsNullOrEmpty(d.Id)) return "";
             Dictionary<string, string> p;
-            lock (_propCache)
+            lock (_propCache) { _propCache.TryGetValue(d.Id, out p); }
+            if (p == null)
             {
-                if (!_propCache.TryGetValue(d.Id, out p)) { p = LoadProps(d.Id); _propCache[d.Id] = p; }
+                p = LoadProps(d.Id);   // النداء البطيء (adb) خارج القفل كي لا يجمّد بقية الخيوط
+                lock (_propCache) { _propCache[d.Id] = p; }
             }
             string v; return p.TryGetValue(key, out v) ? (v ?? "").Trim() : "";
         }
@@ -1050,6 +1052,7 @@ namespace CenterPoint
 
         void LoadInfo()
         {
+            if (pageInfo != null && !pageInfo.Visible) return;   // لا تشغّل adb إلا إذا صفحة المعلومات ظاهرة فعلاً
             if (cbDev.SelectedIndex < 0 || cbDev.SelectedIndex >= devices.Count) return;
             var d = devices[cbDev.SelectedIndex];
             foreach (var l in new[] { lbModel, lbMan, lbAndroid, lbCpu, lbRam, lbBat }) l.Text = "...";
@@ -3958,6 +3961,7 @@ namespace CenterPoint
 
         void FmLoad()
         {
+            if (pageFiles != null && !pageFiles.Visible) return;   // لا تشغّل adb إلا إذا صفحة الملفات ظاهرة
             var d = FmDevice();
             if (d == null) { fmList.Items.Clear(); fmStatus.Text = "اختر الجهاز."; return; }
             if (d.Kind != "android") { fmList.Items.Clear(); fmStatus.Text = "مدير الملفات يدعم أندرويد بهذي النسخة."; return; }
