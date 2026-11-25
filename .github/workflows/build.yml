@@ -26,6 +26,13 @@ jobs:
         shell: bash
         run: echo "${GITHUB_REF_NAME#v}" > publish/version.txt
 
+      - name: Compute SHA-256 fingerprint
+        shell: pwsh
+        run: |
+          $h = (Get-FileHash publish/CenterPoint-Transfer.exe -Algorithm SHA256).Hash.ToLower()
+          "$h  CenterPoint-Transfer.exe" | Out-File -FilePath publish/CenterPoint-Transfer.exe.sha256 -Encoding ascii -NoNewline
+          Write-Host "SHA-256: $h"
+
       - name: Package full zip (exe + ui)
         shell: pwsh
         run: Compress-Archive -Path publish/* -DestinationPath "CenterPoint-Transfer-${{ github.ref_name }}.zip" -Force
@@ -36,5 +43,6 @@ jobs:
           name: CENTER POINT ${{ github.ref_name }}
           files: |
             publish/CenterPoint-Transfer.exe
+            publish/CenterPoint-Transfer.exe.sha256
             publish/version.txt
             CenterPoint-Transfer-${{ github.ref_name }}.zip

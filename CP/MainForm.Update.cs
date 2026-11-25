@@ -101,7 +101,7 @@ namespace CenterPoint
                     resp.EnsureSuccessStatusCode();
                     string json = await resp.Content.ReadAsStringAsync();
 
-                    string tag = "", htmlUrl = "", exeUrl = "";
+                    string tag = "", htmlUrl = "", exeUrl = "", sha256Url = "";
                     using (var doc = JsonDocument.Parse(json))
                     {
                         var root = doc.RootElement;
@@ -112,8 +112,11 @@ namespace CenterPoint
                             foreach (var a in assets.EnumerateArray())
                             {
                                 string nm = a.TryGetProperty("name", out var an) ? (an.GetString() ?? "") : "";
-                                if (nm.ToLowerInvariant().EndsWith(".exe") && a.TryGetProperty("browser_download_url", out var du))
-                                { exeUrl = du.GetString() ?? ""; break; }
+                                string low = nm.ToLowerInvariant();
+                                if (low.EndsWith(".exe") && a.TryGetProperty("browser_download_url", out var du))
+                                    exeUrl = du.GetString() ?? "";
+                                else if (low.EndsWith(".sha256") && a.TryGetProperty("browser_download_url", out var ds))
+                                    sha256Url = ds.GetString() ?? "";
                             }
                     }
                     string latest = (tag ?? "").TrimStart('v', 'V').Trim();
@@ -131,7 +134,7 @@ namespace CenterPoint
                             var ch = MessageBox.Show("يتوفّر إصدار جديد: " + latest + "\r\nالإصدار الحالي: " + cur +
                                 "\r\n\r\nنعم = تحديث تلقائي كامل (يُغلق البرنامج، يُحدّث، ويُعاد فتحه)\r\nلا = فتح صفحة التحميل يدوياً",
                                 "تحديث متوفّر", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Information);
-                            if (ch == DialogResult.Yes) { await DownloadAndInstall(exeUrl, latest, htmlUrl); return; }
+                            if (ch == DialogResult.Yes) { await DownloadAndInstall(exeUrl, latest, htmlUrl, sha256Url); return; }
                             if (ch == DialogResult.No) OpenUrl(htmlUrl != "" ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
                         }
                         else
@@ -187,7 +190,7 @@ namespace CenterPoint
         // OpenUrl مُعرّفة مرّة واحدة في Program.cs (static) وتُستخدم من هنا.
 
         // ===== تحديث تلقائي كامل: تنزيل الـexe الجديد واستبداله عبر سكربت ثم إعادة التشغيل =====
-        async System.Threading.Tasks.Task DownloadAndInstall(string exeUrl, string version, string htmlUrl)
+        async System.Threading.Tasks.Task DownloadAndInstall(string exeUrl, string version, string htmlUrl, string sha256Url = "")
         {
             string exePath;
             try { exePath = Process.GetCurrentProcess().MainModule.FileName; }
@@ -211,6 +214,34 @@ namespace CenterPoint
                     http.DefaultRequestHeaders.Add("User-Agent", "CenterPoint-Updater");
                     var bytes = await http.GetByteArrayAsync(exeUrl);
                     System.IO.File.WriteAllBytes(tmpNew, bytes);
+
+                    // تحقق تشفيري من بصمة SHA-256 قبل التشغيل
+                    if (!string.IsNullOrEmpty(sha256Url))
+                    {
+                        string expectedRaw = "";
+                        try { expectedRaw = await http.GetStringAsync(sha256Url); } catch { }
+                        // ملف البصمة قد يكون "HASH" أو "HASH  filename"
+                        string expected = (expectedRaw ?? "").Trim();
+                        int sp = expected.IndexOfAny(new[] { ' ', '\t', '\r', '\n' });
+                        if (sp > 0) expected = expected.Substring(0, sp);
+                        expected = expected.Trim().ToLowerInvariant();
+
+                        string actual;
+                        using (var sha = System.Security.Cryptography.SHA256.Create())
+                            actual = BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant();
+
+                        if (expected.Length == 64 && expected != actual)
+                        {
+                            try { System.IO.File.Delete(tmpNew); } catch { }
+                            CpLog("ERR", "فشل تحقق بصمة التحديث: متوقّع " + expected.Substring(0, 12) + "… ≠ فعلي " + actual.Substring(0, 12) + "…");
+                            throw new Exception("فشل التحقق من بصمة ملف التحديث (SHA-256). أُلغي التثبيت لحمايتك.");
+                        }
+                        if (expected.Length == 64)
+                            CpLog("INFO", "تحقق البصمة ناجح (SHA-256) — الملف سليم.");
+                        else
+                            CpLog("WARN", "تعذّر قراءة بصمة صالحة — تابع دون تحقق.");
+                    }
+                    else CpLog("WARN", "لا توجد بصمة منشورة لهذا الإصدار — تابع دون تحقق تشفيري.");
                 }
                 if (new System.IO.FileInfo(tmpNew).Length < 1024 * 100)
                     throw new Exception("ملف التحديث صغير/تالف.");
