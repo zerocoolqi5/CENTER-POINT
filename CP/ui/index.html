@@ -326,6 +326,7 @@
           <button class="btn selall" id="xselall" onclick="xferSelAll()">✓ تحديد الكل</button>
         </div>
         <div class="xbtns">
+          <button class="btn" style="background:#1760d6" onclick="xferRefresh()">🔄 تحديث الأجهزة</button>
           <button class="btn g" onclick="xferStart()">▶ ابدأ النقل</button>
           <button class="btn r" onclick="xferCancel()">✖ إلغاء العملية</button>
           <button class="btn ghost" onclick="send('openReport')">📊 عرض التقرير</button>
@@ -450,6 +451,7 @@ function xferStart(){
   document.getElementById('xstatus').textContent='جاري التحضير…';
   post({cmd:'startTransfer', src:s, dst:t, cats:cats});
 }
+function xferRefresh(){ post({cmd:'refreshXfer'}); var st=document.getElementById('xstatus'); if(st) st.textContent='جاري تحديث الأجهزة…'; toast('يعيد فحص الأجهزة المتصلة'); }
 function xferCancel(){ post({cmd:'cancelTransfer'}); document.getElementById('xstatus').textContent='جاري الإلغاء…'; }
 function setXProg(p){
   document.getElementById('xfill').style.width=(p.pct||0)+'%';

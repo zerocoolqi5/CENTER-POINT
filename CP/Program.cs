@@ -877,19 +877,29 @@ namespace CenterPoint
         {
             Task.Run(() =>
             {
-                var list = new List<object>();
-                foreach (var d in devices)
+                try
                 {
-                    if (d.Kind == "android")
+                    var list = new List<object>();
+                    foreach (var d in devices)
                     {
-                        string model = Devices.Prop(d, "ro.product.model"); if (model == "") model = d.Model;
-                        var st = Devices.Storage(d);
-                        list.Add(new { kind = "android", model = model, storeTotal = (int)Math.Round(st.tot), storeFree = (int)Math.Round(st.free), storePct = st.pct });
+                        try
+                        {
+                            if (d.Kind == "android")
+                            {
+                                string model = Devices.Prop(d, "ro.product.model"); if (model == "") model = d.Model;
+                                int tot = 0, free = 0, pct = 0;
+                                try { var st = Devices.Storage(d); tot = (int)Math.Round(st.tot); free = (int)Math.Round(st.free); pct = st.pct; } catch { }
+                                list.Add(new { kind = "android", model = model, storeTotal = tot, storeFree = free, storePct = pct });
+                            }
+                            else if (d.Kind == "mtp") list.Add(new { kind = "mtp", model = d.Model + " (MTP)", storeTotal = 0, storeFree = 0, storePct = 0 });
+                            else list.Add(new { kind = "ios", model = d.Model, storeTotal = 0, storeFree = 0, storePct = 0 });
+                        }
+                        catch (Exception exd) { CpLog("WARN", "جهاز بصفحة النقل: " + exd.Message); }
                     }
-                    else if (d.Kind == "mtp") list.Add(new { kind = "mtp", model = d.Model + " (MTP)", storeTotal = 0, storeFree = 0, storePct = 0 });
-                    else list.Add(new { kind = "ios", model = d.Model, storeTotal = 0, storeFree = 0, storePct = 0 });
+                    PostWeb(JsonSerializer.Serialize(new { type = "xfer-devices", list = list }));
+                    CpLog("OP", "أرسلت " + list.Count + " جهاز لصفحة النقل");
                 }
-                PostWeb(JsonSerializer.Serialize(new { type = "xfer-devices", list = list }));
+                catch (Exception ex) { CpLog("ERR", "SendXferDevices: " + ex.Message); }
             });
         }
 
@@ -2140,6 +2150,7 @@ namespace CenterPoint
             else if (cmd == "quick") { RunQuick(kind); }
             else if (cmd == "startTransfer") StartTransferWeb(src, dst, catList);
             else if (cmd == "cancelTransfer") xferCancel = true;
+            else if (cmd == "refreshXfer") { Refresh2(); SendXferDevices(); }
             else if (cmd == "openReport") OpenLastReport();
         }
 
@@ -2208,9 +2219,15 @@ namespace CenterPoint
 
         void PostWeb(string json)
         {
-            if (!webReady || webHome == null || webHome.CoreWebView2 == null) return;
-            if (webHome.InvokeRequired) webHome.BeginInvoke(new Action(() => { try { webHome.CoreWebView2.PostWebMessageAsString(json); } catch { } }));
-            else { try { webHome.CoreWebView2.PostWebMessageAsString(json); } catch { } }
+            if (webHome == null) return;
+            try
+            {
+                // لازم التوجيه لخيط الواجهة أولاً — قراءة CoreWebView2 من خيط خلفي تُرمى استثناءً
+                if (webHome.InvokeRequired) { webHome.BeginInvoke(new Action(() => PostWeb(json))); return; }
+                if (!webReady || webHome.CoreWebView2 == null) return;
+                webHome.CoreWebView2.PostWebMessageAsString(json);
+            }
+            catch { }
         }
 
         void RefreshHome()

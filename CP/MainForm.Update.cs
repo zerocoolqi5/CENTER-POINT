@@ -86,7 +86,19 @@ namespace CenterPoint
                     http.DefaultRequestHeaders.Add("User-Agent", "CenterPoint-Updater");
                     http.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
                     string api = "https://api.github.com/repos/" + GhOwner + "/" + GhRepo + "/releases/latest";
-                    string json = await http.GetStringAsync(api);
+
+                    var resp = await http.GetAsync(api);
+                    if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        // 404 = المستودع غير موجود بعد أو بلا إصدار منشور — ليست مشكلة إنترنت
+                        CpLog("INFO", "لا توجد إصدارات منشورة بعد (" + GhOwner + "/" + GhRepo + ")");
+                        if (!silent)
+                            MessageBox.Show("لا توجد إصدارات منشورة بعد.\r\nبعد رفع المشروع على GitHub ونشر إصدار (tag) سيعمل الفحص تلقائياً.",
+                                "التحديثات", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
+                    resp.EnsureSuccessStatusCode();
+                    string json = await resp.Content.ReadAsStringAsync();
 
                     string tag = "", htmlUrl = "";
                     using (var doc = JsonDocument.Parse(json))
