@@ -3022,36 +3022,68 @@ namespace CenterPoint
             SetTb(repFlResult, "الملف المختار: " + Path.GetFileName(repFlPath) + "\r\n\r\nلـ .img: حدّد القسم ثم «fastboot flash».\r\nلـ .zip: «sideload» (الجهاز في Recovery).");
         }
 
+        // حاجز الجهاز الواحد لوضع Fastboot — يرجّع السيريال الوحيد أو null مع تنبيه
+        string GetSingleFastbootTarget()
+        {
+            var r = Shell.Run(FastbootPath(), "devices", 12000);
+            var serials = (r.outp ?? "").Split('\n')
+                .Select(l => l.Trim())
+                .Where(l => l.ToLowerInvariant().EndsWith("fastboot"))
+                .Select(l => l.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                .Where(p => p.Length > 0).Select(p => p[0]).ToList();
+            if (serials.Count == 0) { MessageBox.Show("لا يوجد جهاز في وضع Fastboot/Bootloader.\r\nأدخل الجهاز وضع Fastboot ثم أعد المحاولة.", "تحديد الجهاز المستهدف", MessageBoxButtons.OK, MessageBoxIcon.Warning); return null; }
+            if (serials.Count > 1) { MessageBox.Show("تم اكتشاف أكثر من جهاز في وضع Fastboot (" + serials.Count + ").\r\nافصل الأجهزة غير المطلوبة واترك الجهاز المستهدف فقط، ثم أعد المحاولة.\r\n\r\n⛔ منعاً للتفليش على جهاز غير مقصود.", "تحديد الجهاز المستهدف", MessageBoxButtons.OK, MessageBoxIcon.Warning); return null; }
+            return serials[0];
+        }
+
+        // حاجز الجهاز الواحد لوضع Recovery/Sideload
+        string GetSingleSideloadTarget()
+        {
+            var r = Shell.Run("adb", "devices", 12000);
+            var serials = (r.outp ?? "").Split('\n')
+                .Select(l => l.Trim())
+                .Where(l => { var low = l.ToLowerInvariant(); return low.EndsWith("sideload") || low.EndsWith("recovery"); })
+                .Select(l => l.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                .Where(p => p.Length > 0).Select(p => p[0]).ToList();
+            if (serials.Count == 0) { MessageBox.Show("لا يوجد جهاز في وضع Recovery/Sideload.\r\nأدخل الجهاز وضع «Apply update from ADB» ثم أعد المحاولة.", "تحديد الجهاز المستهدف", MessageBoxButtons.OK, MessageBoxIcon.Warning); return null; }
+            if (serials.Count > 1) { MessageBox.Show("تم اكتشاف أكثر من جهاز في وضع Recovery/Sideload (" + serials.Count + ").\r\nافصل الأجهزة غير المطلوبة واترك الجهاز المستهدف فقط، ثم أعد المحاولة.\r\n\r\n⛔ منعاً للتطبيق على جهاز غير مقصود.", "تحديد الجهاز المستهدف", MessageBoxButtons.OK, MessageBoxIcon.Warning); return null; }
+            return serials[0];
+        }
+
         void RepFlFastboot()
         {
             if (repFlPath == "" || !File.Exists(repFlPath)) { MessageBox.Show("اختر ملف .img أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
             string part = (repFlPartition == null ? "" : repFlPartition.Text).Trim();
             if (part == "") { MessageBox.Show("حدّد اسم القسم (مثل boot أو recovery).", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            string msg = "⛔ تحذير: أنت على وشك تفليش القسم «" + part + "» بالملف:\r\n" + Path.GetFileName(repFlPath) +
+            string fbSerial = GetSingleFastbootTarget();   // حاجز الجهاز الواحد
+            if (fbSerial == null) return;
+            string msg = "⛔ تحذير: أنت على وشك تفليش القسم «" + part + "» على الجهاز [" + fbSerial + "] بالملف:\r\n" + Path.GetFileName(repFlPath) +
                          "\r\n\r\n• قد يمسح بيانات هذا القسم.\r\n• تأكد أن الملف والقسم مطابقان لموديل الجهاز.\r\n• خذ نسخة احتياطية أولاً.\r\n\r\nمتابعة التفليش؟";
             if (MessageBox.Show(msg, "تأكيد التفليش (fastboot)", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-            if (MessageBox.Show("تأكيد نهائي: تنفيذ fastboot flash " + part + "؟", "تأكيد نهائي", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) != DialogResult.Yes) return;
-            SetTb(repFlResult, "جاري: fastboot flash " + part + " ...\r\nلا تفصل الجهاز.");
+            if (MessageBox.Show("تأكيد نهائي: تنفيذ fastboot flash " + part + " على [" + fbSerial + "]؟", "تأكيد نهائي", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) != DialogResult.Yes) return;
+            SetTb(repFlResult, "جاري: fastboot -s " + fbSerial + " flash " + part + " ...\r\nلا تفصل الجهاز.");
             Task.Run(() =>
             {
-                var r = Shell.Run(FastbootPath(), "flash " + part + " " + Shell.Q(repFlPath), 1800000);
-                SetTb(repFlResult, "═══ نتيجة fastboot flash " + part + " ═══\r\n\r\n" + (r.outp ?? "") + "\r\n\r\n" + (r.ok ? "✔ انتهى." : "✗ فشل — راجع المخرجات."));
-                LogOp("تفليش fastboot: " + part);
+                var r = Shell.Run(FastbootPath(), "-s " + Shell.Q(fbSerial) + " flash " + part + " " + Shell.Q(repFlPath), 1800000);
+                SetTb(repFlResult, "═══ نتيجة fastboot flash " + part + " [" + fbSerial + "] ═══\r\n\r\n" + (r.outp ?? "") + "\r\n\r\n" + (r.ok ? "✔ انتهى." : "✗ فشل — راجع المخرجات."));
+                LogOp("تفليش fastboot: " + part + " على " + fbSerial);
             });
         }
 
         void RepFlSideload()
         {
             if (repFlPath == "" || !File.Exists(repFlPath)) { MessageBox.Show("اختر ملف .zip أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            string msg = "ستطبّق حزمة التحديث عبر adb sideload:\r\n" + Path.GetFileName(repFlPath) +
+            string slSerial = GetSingleSideloadTarget();   // حاجز الجهاز الواحد
+            if (slSerial == null) return;
+            string msg = "ستطبّق حزمة التحديث عبر adb sideload على الجهاز [" + slSerial + "]:\r\n" + Path.GetFileName(repFlPath) +
                          "\r\n\r\n• يجب أن يكون الجهاز في وضع Recovery ← «Apply update from ADB».\r\n• بعض الحزم قد تمسح بيانات حسب نوعها.\r\n\r\nمتابعة؟";
             if (MessageBox.Show(msg, "تأكيد sideload", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
-            SetTb(repFlResult, "جاري: adb sideload ...\r\nلا تفصل الجهاز.");
+            SetTb(repFlResult, "جاري: adb -s " + slSerial + " sideload ...\r\nلا تفصل الجهاز.");
             Task.Run(() =>
             {
-                var r = Shell.Run("adb", "sideload " + Shell.Q(repFlPath), 1800000);
-                SetTb(repFlResult, "═══ نتيجة adb sideload ═══\r\n\r\n" + (r.outp ?? "") + "\r\n\r\n" + (r.ok ? "✔ انتهى." : "✗ فشل — راجع المخرجات."));
-                LogOp("sideload");
+                var r = Shell.Run("adb", "-s " + Shell.Q(slSerial) + " sideload " + Shell.Q(repFlPath), 1800000);
+                SetTb(repFlResult, "═══ نتيجة adb sideload [" + slSerial + "] ═══\r\n\r\n" + (r.outp ?? "") + "\r\n\r\n" + (r.ok ? "✔ انتهى." : "✗ فشل — راجع المخرجات."));
+                LogOp("sideload على " + slSerial);
             });
         }
 
