@@ -1,12 +1,12 @@
 ; ============================================================
 ;  CENTER POINT TRANSFER - مثبّت احترافي (Inno Setup)
 ;  يبني Setup.exe واحد مع: اختصارات، إزالة، وفحص WebView2 تلقائياً.
-;  الطريقة: 1) شغّل «بناء_وتثبيت.bat» مرة لإنتاج مجلد publish
-;           2) افتح هذا الملف ببرنامج Inno Setup واضغط Compile (أو شغّل بناء_مثبّت.bat)
+;  الطريقة: 1) شغّل «build_and_install.bat» مرة لإنتاج مجلد publish
+;           2) افتح هذا الملف ببرنامج Inno Setup واضغط Compile (أو شغّل build_installer.bat)
 ; ============================================================
 
 #define AppName "CENTER POINT TRANSFER"
-#define AppVer "12.0.0"
+#define AppVer "12.1.0"
 #define Publisher "سنتر بوينت للاتصالات"
 #define ExeName "CenterPoint-Transfer.exe"
 #define PubDir "bin\Release\net8.0-windows\win-x64\publish"

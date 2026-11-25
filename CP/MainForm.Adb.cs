@@ -39,7 +39,9 @@ namespace CenterPoint
             rcBtn.FlatAppearance.BorderColor = BLUE; rcBtn.Click += (s, e) => AdbReboot("recovery", "الدخول إلى Recovery");
             var blBtn = new Button { Text = "⚡ Bootloader", Location = new Point(434, 84), Size = new Size(130, 30), BackColor = CARD, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Arial", 8, FontStyle.Bold) };
             blBtn.FlatAppearance.BorderColor = BLUE; blBtn.Click += (s, e) => AdbReboot("bootloader", "الدخول إلى Bootloader");
-            pageAdb.Controls.Add(infoBtn); pageAdb.Controls.Add(rbBtn); pageAdb.Controls.Add(rcBtn); pageAdb.Controls.Add(blBtn);
+            var uniBtn = new Button { Text = "🔎 كشف موحّد", Location = new Point(572, 84), Size = new Size(123, 30), BackColor = Color.FromArgb(129, 64, 224), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Arial", 8, FontStyle.Bold) };
+            uniBtn.FlatAppearance.BorderSize = 0; uniBtn.Click += (s, e) => UnifiedScan();
+            pageAdb.Controls.Add(infoBtn); pageAdb.Controls.Add(rbBtn); pageAdb.Controls.Add(rcBtn); pageAdb.Controls.Add(blBtn); pageAdb.Controls.Add(uniBtn);
 
             // صف 2: تثبيت/إزالة APK
             var instBtn = new Button { Text = "📲 تثبيت APK", Location = new Point(20, 120), Size = new Size(150, 30), BackColor = Color.FromArgb(35, 115, 75), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Arial", 9, FontStyle.Bold) };
@@ -79,6 +81,96 @@ namespace CenterPoint
                 return null;
             }
             return connected[0];
+        }
+
+        // ============ محرك موحّد: كشف كل الأجهزة عبر كل المنافذ ============
+        // يجمع ADB (نظام/recovery/sideload) + Fastboot/Bootloader + MTP + iOS في عرض واحد،
+        // ويحذّر عند تعدّد الأجهزة على نفس المنفذ (أمان العمليات الموجّهة لجهاز واحد).
+        void UnifiedScan()
+        {
+            SetTb(adbResult, "🔎 كشف موحّد — جاري فحص كل المنافذ (ADB / Fastboot / MTP / iOS)...");
+            Task.Run(() =>
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("════════ كشف موحّد لكل الأجهزة ════════");
+                sb.AppendLine("الوقت: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                sb.AppendLine("");
+
+                int totalTargets = 0;
+
+                // 1) ADB (أندرويد: نظام/recovery/sideload)
+                sb.AppendLine("● ADB (أندرويد):");
+                int adbCount = 0;
+                var ad = Shell.Run("adb", "devices -l", 20000);
+                if (ad.ok)
+                {
+                    foreach (var ln in (ad.outp ?? "").Replace("\r", "").Split('\n'))
+                    {
+                        var t = ln.Trim();
+                        if (t == "" || t.StartsWith("List of")) continue;
+                        var p = t.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (p.Length < 2) continue;
+                        adbCount++;
+                        string id = p[0], state = p[1];
+                        string model = "";
+                        var mm = Regex.Match(t, @"model:(\S+)");
+                        if (mm.Success) model = mm.Groups[1].Value.Replace('_', ' ');
+                        string mark = state == "device" ? "✔" : (state == "unauthorized" ? "🔒" : "⚠");
+                        sb.AppendLine("   " + mark + " " + id + " — " + state + (model != "" ? " (" + model + ")" : ""));
+                    }
+                }
+                if (adbCount == 0) sb.AppendLine("   — لا أجهزة ADB");
+                else totalTargets += adbCount;
+                sb.AppendLine("");
+
+                // 2) Fastboot / Bootloader
+                sb.AppendLine("● Fastboot / Bootloader:");
+                int fbCount = 0;
+                var fb = Shell.Run("fastboot", "devices", 15000);
+                if (fb.ok)
+                {
+                    foreach (var ln in (fb.outp ?? "").Replace("\r", "").Split('\n'))
+                    {
+                        var t = ln.Trim();
+                        if (t == "") continue;
+                        var p = t.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (p.Length < 1) continue;
+                        fbCount++;
+                        sb.AppendLine("   ⚡ " + p[0] + (p.Length > 1 ? " — " + p[1] : " — fastboot"));
+                    }
+                }
+                if (fbCount == 0) sb.AppendLine("   — لا أجهزة بوضع fastboot");
+                else totalTargets += fbCount;
+                sb.AppendLine("");
+
+                // 3) MTP + iOS (من قائمة الأجهزة المُدارة)
+                int mtpCount = 0, iosCount = 0;
+                try
+                {
+                    foreach (var d in devices)
+                    {
+                        if (d.Kind == "mtp") { mtpCount++; }
+                        else if (d.Kind == "ios") { iosCount++; }
+                    }
+                }
+                catch { }
+                sb.AppendLine("● MTP (بدون ADB): " + (mtpCount == 0 ? "لا أجهزة" : mtpCount + " جهاز"));
+                try { foreach (var d in devices.Where(x => x.Kind == "mtp")) sb.AppendLine("   🔗 " + (d.Model ?? "جهاز MTP")); } catch { }
+                sb.AppendLine("● iOS (آيفون/آيباد): " + (iosCount == 0 ? "لا أجهزة" : iosCount + " جهاز"));
+                try { foreach (var d in devices.Where(x => x.Kind == "ios")) sb.AppendLine("   🍎 " + (d.Model ?? "جهاز iOS")); } catch { }
+                sb.AppendLine("");
+
+                // خلاصة وأمان
+                sb.AppendLine("──────────────────────────────");
+                int grand = adbCount + fbCount + mtpCount + iosCount;
+                sb.AppendLine("الإجمالي: " + grand + " جهاز  (ADB " + adbCount + " · Fastboot " + fbCount + " · MTP " + mtpCount + " · iOS " + iosCount + ")");
+                if (adbCount > 1) sb.AppendLine("⚠ أكثر من جهاز ADB — العمليات الموجّهة لجهاز واحد ستطلب تحديد الجهاز أو فصل الباقي.");
+                if (fbCount > 1) sb.AppendLine("⚠ أكثر من جهاز Fastboot — لا تنفّذ فلاش قبل ترك جهاز واحد فقط.");
+                if (grand == 0) sb.AppendLine("لا أجهزة متصلة. تأكد من الكيبل وتفعيل «تصحيح USB» أو ضع الجهاز بالوضع المناسب.");
+
+                SetTb(adbResult, sb.ToString());
+                CpLog("OP", "كشف موحّد: " + grand + " جهاز");
+            });
         }
 
         void AdbInfo()

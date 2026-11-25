@@ -13,7 +13,7 @@ namespace CenterPoint
     public partial class MainForm
     {
         // عدّلها لو اسم المستودع مختلف
-        const string GhOwner = "Zerocooliq5";
+        const string GhOwner = "zerocoolqi5";
         const string GhRepo = "center-point";
 
         static string CurrentVersion()

@@ -39,6 +39,7 @@ namespace CenterPoint
     {
         public string Date { get; set; }
         public string Model { get; set; }
+        public string Serial { get; set; }   // آيمي/سيريال الجهاز — سجل لكل جهاز
         public string Tool { get; set; }
         public string Firmware { get; set; }
         public string Result { get; set; }
@@ -62,7 +63,7 @@ namespace CenterPoint
         // Recovery
         TextBox fwRecRes;
         // سجل التفليش
-        TextBox fwLogModelB, fwLogFwB, fwLogNoteB; ComboBox fwLogToolC, fwLogResultC; ListBox fwLogList;
+        TextBox fwLogModelB, fwLogFwB, fwLogNoteB, fwLogSerialB, fwLogFilterB; ComboBox fwLogToolC, fwLogResultC; ListBox fwLogList;
         List<FlashOp> flashLog = new List<FlashOp>();
 
         string FwLibJson { get { return System.IO.Path.Combine(ExportsDir, "firmware_lib.json"); } }
@@ -587,6 +588,43 @@ namespace CenterPoint
                     var d = devices.FirstOrDefault(x => x.Kind == "android");
                     string model = d != null ? Devices.Prop(d, "ro.product.model") : "";
                     sb.AppendLine("● الحالة: النظام يعمل طبيعي ✔  " + (model != "" ? "(" + model + ")" : ""));
+                    sb.AppendLine("");
+                    sb.AppendLine("── فحص صحة موسّع (قراءة فقط) ──");
+                    try
+                    {
+                        // بطارية
+                        string bat = Shell.Run("adb", "shell dumpsys battery", 12000).outp ?? "";
+                        var lvl = Regex.Match(bat, @"level:\s*(\d+)");
+                        var tmp = Regex.Match(bat, @"temperature:\s*(\d+)");
+                        var hth = Regex.Match(bat, @"health:\s*(\d+)");
+                        if (lvl.Success) sb.AppendLine("🔋 البطارية: " + lvl.Groups[1].Value + "%" + (tmp.Success ? "  ·  حرارة " + (int.Parse(tmp.Groups[1].Value) / 10.0).ToString("0.#") + "°C" : "") + (hth.Success ? "  ·  صحة " + BatHealth(hth.Groups[1].Value) : ""));
+                        // تخزين
+                        string df = Shell.Run("adb", "shell df /data", 12000).outp ?? "";
+                        var dln = df.Replace("\r", "").Split('\n').FirstOrDefault(l => l.Contains("/data"));
+                        if (!string.IsNullOrEmpty(dln))
+                        {
+                            var pp = dln.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (pp.Length >= 5) sb.AppendLine("💾 تخزين /data: مستخدم " + pp[2] + " / متاح " + pp[3] + " (" + pp[4] + ")");
+                        }
+                        // تشفير
+                        string crypto = (Shell.Run("adb", "shell getprop ro.crypto.state", 8000).outp ?? "").Trim();
+                        if (crypto != "") sb.AppendLine("🔐 التشفير: " + (crypto == "encrypted" ? "مُشفّر (طبيعي)" : crypto));
+                        // حالة قفل البوتلودر
+                        string locked = (Shell.Run("adb", "shell getprop ro.boot.flash.locked", 8000).outp ?? "").Trim();
+                        string vbs = (Shell.Run("adb", "shell getprop ro.boot.verifiedbootstate", 8000).outp ?? "").Trim();
+                        if (locked != "" || vbs != "")
+                            sb.AppendLine("🔒 البوتلودر: " + (locked == "1" ? "مقفل (locked)" : locked == "0" ? "مفتوح (unlocked)" : "?") + (vbs != "" ? "  ·  verifiedboot: " + vbs : ""));
+                        // شريحة
+                        if (d != null)
+                        {
+                            string plat = Devices.Prop(d, "ro.board.platform");
+                            string hw = Devices.Prop(d, "ro.hardware");
+                            string fam = FwChipFamily(plat, hw);
+                            if (fam != "" && fam != "unknown") sb.AppendLine("🧩 الشريحة: " + fam + (plat != "" ? " (" + plat + ")" : ""));
+                        }
+                    }
+                    catch (Exception exh) { sb.AppendLine("(تعذّر بعض فحوصات الصحة: " + exh.Message + ")"); }
+                    sb.AppendLine("");
                     sb.AppendLine("● موصى: نسخة احتياطية أولاً. إن كان فيه بطء/تعليق جرّب Wipe cache من Recovery.");
                 }
                 else
@@ -639,13 +677,24 @@ namespace CenterPoint
 
             var add = FwBtn(fwLogP, "➕ تسجيل عملية", 20, 86, 220, Color.FromArgb(35, 115, 75));
             add.Click += (s, e) => FlashLogAdd();
-            var del = FwBtn(fwLogP, "🗑 حذف", 248, 86, 160, Color.FromArgb(150, 60, 60));
+            var del = FwBtn(fwLogP, "🗑 حذف", 248, 86, 120, Color.FromArgb(150, 60, 60));
             del.Click += (s, e) => FlashLogDel();
-            var stat = FwBtn(fwLogP, "📊 إحصائية", 416, 86, 160, CARD);
+            var expo = FwBtn(fwLogP, "🖨 تصدير", 376, 86, 120, Color.FromArgb(47, 139, 255));
+            expo.Click += (s, e) => FlashLogExport();
+            var stat = FwBtn(fwLogP, "📊 إحصائية", 504, 86, 191, CARD);
             stat.FlatAppearance.BorderColor = BLUE; stat.FlatAppearance.BorderSize = 1;
             stat.Click += (s, e) => FlashLogStats();
 
-            fwLogList = new ListBox { Location = new Point(20, 128), Size = new Size(675, 438), BackColor = Color.FromArgb(10, 16, 32), ForeColor = Color.FromArgb(200, 220, 255), BorderStyle = BorderStyle.FixedSingle, Font = new Font("Consolas", 9), RightToLeft = RightToLeft.Yes };
+            // صف جديد: آيمي/سيريال + جلب هوية الجهاز + فلترة سجل جهاز معيّن
+            var fill = FwBtn(fwLogP, "📱 جلب هوية الجهاز", 20, 124, 160, Color.FromArgb(35, 115, 75));
+            fill.Click += (s, e) => FlashLogFillDevice();
+            FwLbl(fwLogP, "آيمي:", 186, 126);
+            fwLogSerialB = FwBox(fwLogP, 240, 124, 180);
+            FwLbl(fwLogP, "فلترة:", 430, 126);
+            fwLogFilterB = FwBox(fwLogP, 495, 124, 200);
+            fwLogFilterB.TextChanged += (s, e) => FlashLogRefresh();
+
+            fwLogList = new ListBox { Location = new Point(20, 162), Size = new Size(675, 404), BackColor = Color.FromArgb(10, 16, 32), ForeColor = Color.FromArgb(200, 220, 255), BorderStyle = BorderStyle.FixedSingle, Font = new Font("Consolas", 9), RightToLeft = RightToLeft.Yes };
             fwLogP.Controls.Add(fwLogList);
         }
 
@@ -653,10 +702,28 @@ namespace CenterPoint
         {
             string model = fwLogModelB.Text.Trim();
             if (model == "") { MessageBox.Show("اكتب الموديل.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-            flashLog.Insert(0, new FlashOp { Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"), Model = model, Tool = fwLogToolC.Text, Firmware = fwLogFwB.Text.Trim(), Result = fwLogResultC.Text, Note = fwLogNoteB.Text.Trim() });
+            string serial = fwLogSerialB != null ? fwLogSerialB.Text.Trim() : "";
+            flashLog.Insert(0, new FlashOp { Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"), Model = model, Serial = serial, Tool = fwLogToolC.Text, Firmware = fwLogFwB.Text.Trim(), Result = fwLogResultC.Text, Note = fwLogNoteB.Text.Trim() });
             FlashLogSave(); FlashLogRefresh();
-            fwLogModelB.Text = ""; fwLogFwB.Text = ""; fwLogNoteB.Text = "";
-            LogOp("سجل تفليش: " + model + " = " + fwLogResultC.Text);
+            fwLogModelB.Text = ""; fwLogFwB.Text = ""; fwLogNoteB.Text = ""; if (fwLogSerialB != null) fwLogSerialB.Text = "";
+            LogOp("سجل تفليش: " + model + (serial != "" ? " [" + serial + "]" : "") + " = " + fwLogResultC.Text);
+        }
+
+        // جلب موديل وسيريال الجهاز المتصل تلقائياً (جهاز واحد فقط)
+        void FlashLogFillDevice()
+        {
+            try
+            {
+                var d = DeviceDetect();
+                if (d == null || !d.Present) { MessageBox.Show("لا يوجد جهاز متصل قابل للكشف (فعّل تصحيح USB أو ضع الجهاز بوضع fastboot/recovery).", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+                string model = (d.Mfr + " " + d.Model).Trim(); if (model == "") model = d.Model;
+                if (fwLogModelB != null && model != "") fwLogModelB.Text = model;
+                if (fwLogSerialB != null && !string.IsNullOrEmpty(d.Serial)) fwLogSerialB.Text = d.Serial;
+                string chip = string.IsNullOrEmpty(d.ChipFamily) ? "" : "  شريحة: " + d.ChipFamily;
+                if (fwLogNoteB != null && chip != "" && fwLogNoteB.Text.Trim() == "") fwLogNoteB.Text = "شريحة " + d.ChipFamily + (d.Android != "" ? " · أندرويد " + d.Android : "");
+                LogOp("جلب هوية جهاز للسجل: " + model);
+            }
+            catch (Exception ex) { ErrBox("تعذّر جلب هوية الجهاز: " + ex.Message); }
         }
 
         void FlashLogDel()
@@ -678,8 +745,66 @@ namespace CenterPoint
         {
             if (fwLogList == null) return;
             fwLogList.Items.Clear();
+            string flt = (fwLogFilterB != null ? fwLogFilterB.Text : "").Trim();
+            int shown = 0;
             foreach (var x in flashLog)
-                fwLogList.Items.Add((x.Date ?? "") + "  |  " + (x.Model ?? "") + "  |  " + (x.Tool ?? "") + "  |  " + (x.Result ?? "") + (string.IsNullOrEmpty(x.Firmware) ? "" : "  |  " + x.Firmware) + (string.IsNullOrEmpty(x.Note) ? "" : "  — " + x.Note));
+            {
+                if (flt != "")
+                {
+                    bool m = (x.Model ?? "").IndexOf(flt, StringComparison.OrdinalIgnoreCase) >= 0
+                          || (x.Serial ?? "").IndexOf(flt, StringComparison.OrdinalIgnoreCase) >= 0
+                          || (x.Firmware ?? "").IndexOf(flt, StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (!m) continue;
+                }
+                shown++;
+                fwLogList.Items.Add((x.Date ?? "") + "  |  " + (x.Model ?? "") + (string.IsNullOrEmpty(x.Serial) ? "" : "  [" + x.Serial + "]") + "  |  " + (x.Tool ?? "") + "  |  " + (x.Result ?? "") + (string.IsNullOrEmpty(x.Firmware) ? "" : "  |  " + x.Firmware) + (string.IsNullOrEmpty(x.Note) ? "" : "  — " + x.Note));
+            }
+            if (flt != "" && shown == 0) fwLogList.Items.Add("لا عمليات مطابقة لـ: " + flt);
+        }
+
+        // تصدير سجل التفليش HTML (يحترم الفلترة الحالية)
+        void FlashLogExport()
+        {
+            try
+            {
+                string flt = (fwLogFilterB != null ? fwLogFilterB.Text : "").Trim();
+                var rows = flashLog.Where(x => flt == ""
+                    || (x.Model ?? "").IndexOf(flt, StringComparison.OrdinalIgnoreCase) >= 0
+                    || (x.Serial ?? "").IndexOf(flt, StringComparison.OrdinalIgnoreCase) >= 0
+                    || (x.Firmware ?? "").IndexOf(flt, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+                if (rows.Count == 0) { MessageBox.Show("لا عمليات للتصدير.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+                var sb = new StringBuilder();
+                sb.Append("<!DOCTYPE html><html dir='rtl' lang='ar'><head><meta charset='utf-8'><title>سجل التفليش</title>");
+                sb.Append("<style>body{font-family:Arial;background:#fff;color:#111;padding:24px}h1{color:#1a66cc;margin:0}");
+                sb.Append(".muted{color:#666;font-size:13px}table{width:100%;border-collapse:collapse;margin-top:14px}");
+                sb.Append("th,td{border:1px solid #ccc;padding:7px;text-align:right;font-size:13px}th{background:#eef3fb}</style></head><body>");
+                sb.Append("<h1>سنتر بوينت للاتصالات</h1><div class='muted'>سجل عمليات التفليش — " + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + (flt != "" ? " — فلترة: " + HtmlEsc(flt) : "") + "</div>");
+                sb.Append("<table><tr><th>التاريخ</th><th>الموديل</th><th>آيمي/سيريال</th><th>الأداة</th><th>الفيرموير</th><th>النتيجة</th><th>ملاحظة</th></tr>");
+                foreach (var x in rows)
+                    sb.Append("<tr><td>" + HtmlEsc(x.Date) + "</td><td>" + HtmlEsc(x.Model) + "</td><td>" + HtmlEsc(x.Serial) + "</td><td>" + HtmlEsc(x.Tool) + "</td><td>" + HtmlEsc(x.Firmware) + "</td><td>" + HtmlEsc(x.Result) + "</td><td>" + HtmlEsc(x.Note) + "</td></tr>");
+                sb.Append("</table><p class='muted' style='margin-top:18px'>عدد العمليات: " + rows.Count + "</p></body></html>");
+                string path = System.IO.Path.Combine(ExportsDir, "flash_log_" + DateTime.Now.ToString("yyMMddHHmmss") + ".html");
+                File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = path, UseShellExecute = true });
+                LogOp("تصدير سجل تفليش (" + rows.Count + ")");
+            }
+            catch (Exception ex) { ErrBox("تعذّر تصدير السجل: " + ex.Message); }
+        }
+
+        static string HtmlEsc(string s) { s = s ?? ""; return s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;"); }
+
+        static string BatHealth(string code)
+        {
+            switch ((code ?? "").Trim())
+            {
+                case "2": return "جيدة ✔";
+                case "3": return "حرارة زائدة ⚠";
+                case "4": return "تالفة ✖";
+                case "5": return "فوق الجهد ⚠";
+                case "6": return "فشل غير معروف";
+                case "7": return "باردة";
+                default: return "غير معروفة";
+            }
         }
 
         void FlashLogLoad()

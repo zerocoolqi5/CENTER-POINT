@@ -420,7 +420,7 @@ namespace CenterPoint
         TextBox repairResult, repMgrResult, repFlResult, repFlPartition, repUnlockResult, repMgrModel;
         string repMgrPath = "", repFlPath = "";
         System.Windows.Forms.Timer monTimer; Button monBtn; Label monStatus; bool monOn; string monLast = "";
-        System.Windows.Forms.Timer perfTimer; string baseTitle = "CENTER POINT TRANSFER V12.0.0 PRO - سنتر بوينت";
+        System.Windows.Forms.Timer perfTimer; string baseTitle = "CENTER POINT TRANSFER V12.1.0 PRO - سنتر بوينت";
 
         // عناصر قسم فحص USB
         Button usbScanBtn, usbToolsBtn, usbSaveBtn;
@@ -526,7 +526,7 @@ namespace CenterPoint
 
         public MainForm()
         {
-            Text = "CENTER POINT TRANSFER V12.0.0 PRO - سنتر بوينت";
+            Text = "CENTER POINT TRANSFER V12.1.0 PRO - سنتر بوينت";
             RightToLeft = RightToLeft.Yes;
             RightToLeftLayout = false;
             ClientSize = new Size(1040, 710);
@@ -556,6 +556,7 @@ namespace CenterPoint
             BuildCustomersPage();
             BuildInventoryPage();
             BuildInvoicesPage();
+            BuildBizPage();
             BuildSamsungPage();
             BuildFwPage();
             BuildSettingsPage();
@@ -705,9 +706,11 @@ namespace CenterPoint
             biInv.Click += (s, e) => ShowPage("inventory");
             biTickets = MakeSideButton("🎫  تذاكر الصيانة", 1270);
             biTickets.Click += (s, e) => ShowPage("tickets");
+            biBiz = MakeSideButton("📈  التقارير المالية", 1314);
+            biBiz.Click += (s, e) => ShowPage("biz");
 
             // ===== الإعدادات =====
-            biSettings = MakeSideButton("⚙  الإعدادات", 1314);
+            biSettings = MakeSideButton("⚙  الإعدادات", 1358);
             biSettings.Click += (s, e) => ShowPage("settings");
 
             Tr(biInfo, "📱  معلومات الجهاز", "📱  Device Info");
@@ -727,7 +730,7 @@ namespace CenterPoint
 
             var footer = new Label
             {
-                Text = "CENTER POINT\nV8 PRO",
+                Text = "CENTER POINT\nV12.1.0 PRO",
                 ForeColor = Color.FromArgb(120, 140, 180), BackColor = SIDE,
                 Location = new Point(10, 610), Size = new Size(160, 40),
                 TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Arial", 8),
@@ -837,6 +840,7 @@ namespace CenterPoint
             if (pageCust != null) { pageCust.Visible = (name == "customers"); if (name == "customers") CustomersRefreshList(); }
             if (pageInv != null) { pageInv.Visible = (name == "inventory"); if (name == "inventory") InventoryRefreshList(); }
             if (pageInvoice != null) { pageInvoice.Visible = (name == "invoices"); if (name == "invoices") InvoicesRefreshList(); }
+            if (pageBiz != null) { pageBiz.Visible = (name == "biz"); if (name == "biz") BizLoad(); }
             if (pageSamsung != null) pageSamsung.Visible = (name == "samsung");
             if (pageFw != null) pageFw.Visible = (name == "fw");
             if (pageSettings != null) pageSettings.Visible = (name == "settings");
@@ -861,6 +865,7 @@ namespace CenterPoint
             if (biCust != null) SideActive(biCust, name == "customers");
             if (biInv != null) SideActive(biInv, name == "inventory");
             if (biInvoice != null) SideActive(biInvoice, name == "invoices");
+            if (biBiz != null) SideActive(biBiz, name == "biz");
             if (biSamsung != null) SideActive(biSamsung, name == "samsung");
             if (biFw != null) SideActive(biFw, name == "fw");
             if (biSettings != null) SideActive(biSettings, name == "settings");
@@ -3744,7 +3749,7 @@ namespace CenterPoint
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
                 try
                 {
-                    File.WriteAllText(dlg.FileName, "CENTER POINT TRANSFER V12.0.0 PRO\r\n" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n\r\n" + content, new UTF8Encoding(true));
+                    File.WriteAllText(dlg.FileName, "CENTER POINT TRANSFER V12.1.0 PRO\r\n" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n\r\n" + content, new UTF8Encoding(true));
                     LogOp("تم حفظ تقرير تشخيص USB");
                     MessageBox.Show("تم حفظ التقرير بنجاح.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }

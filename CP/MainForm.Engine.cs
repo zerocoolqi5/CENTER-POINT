@@ -410,9 +410,59 @@ namespace CenterPoint
                 sb.AppendLine("========================================");
                 sb.AppendLine("سنتر بوينت للاتصالات");
                 File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
+                try { AppendTransferHistory(s, d, total, ok, fail, bytes, secs); } catch { }
                 return path;
             }
             catch { return null; }
+        }
+
+        public class TransferHist
+        {
+            public string Date { get; set; }
+            public string From { get; set; }
+            public string To { get; set; }
+            public int Total { get; set; }
+            public int Ok { get; set; }
+            public int Fail { get; set; }
+            public long Bytes { get; set; }
+            public double Secs { get; set; }
+        }
+
+        string TransferHistJson { get { return Path.Combine(ExportsDir, "transfer_history.json"); } }
+
+        // سجل نقل تراكمي — إضافة فقط، لا يؤثر على محرك النقل
+        void AppendTransferHistory(Device s, Device d, int total, int ok, int fail, long bytes, double secs)
+        {
+            List<TransferHist> hist;
+            try { hist = File.Exists(TransferHistJson) ? (System.Text.Json.JsonSerializer.Deserialize<List<TransferHist>>(File.ReadAllText(TransferHistJson)) ?? new List<TransferHist>()) : new List<TransferHist>(); }
+            catch { hist = new List<TransferHist>(); }
+            hist.Insert(0, new TransferHist { Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"), From = s != null ? s.Model : "", To = d != null ? d.Model : "", Total = total, Ok = ok, Fail = fail, Bytes = bytes, Secs = secs });
+            if (hist.Count > 500) hist = hist.Take(500).ToList();
+            try { File.WriteAllText(TransferHistJson, System.Text.Json.JsonSerializer.Serialize(hist, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(true)); }
+            catch { }
+        }
+
+        // إحصائية النقل التراكمية (مدى الحياة)
+        void TransferStats()
+        {
+            try
+            {
+                List<TransferHist> hist = File.Exists(TransferHistJson) ? (System.Text.Json.JsonSerializer.Deserialize<List<TransferHist>>(File.ReadAllText(TransferHistJson)) ?? new List<TransferHist>()) : new List<TransferHist>();
+                if (hist.Count == 0) { MessageBox.Show("لا يوجد سجل نقل بعد. أكمل عملية نقل وستُحتسب هنا.", "إحصائية النقل", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+                int ops = hist.Count, files = hist.Sum(h => h.Ok), fails = hist.Sum(h => h.Fail);
+                long bytes = hist.Sum(h => h.Bytes); double secs = hist.Sum(h => h.Secs);
+                int totalFiles = hist.Sum(h => h.Total);
+                double rate = totalFiles > 0 ? (files * 100.0 / totalFiles) : 0;
+                var msg = "عدد عمليات النقل: " + ops + "\r\n" +
+                          "إجمالي الملفات المنقولة: " + files + "\r\n" +
+                          "ملفات فشلت: " + fails + "\r\n" +
+                          "نسبة النجاح: " + rate.ToString("0.0") + "%\r\n" +
+                          "الحجم الكلي المنقول: " + FmtSize(bytes) + "\r\n" +
+                          "إجمالي الوقت: " + (int)(secs / 60) + " دقيقة\r\n" +
+                          "آخر نقل: " + hist[0].Date + " — من " + hist[0].From + " إلى " + hist[0].To;
+                MessageBox.Show(msg, "📊 إحصائية النقل التراكمية", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex) { ErrBox("تعذّر قراءة إحصائية النقل: " + ex.Message); }
         }
 
         void Transfer(Device s, Device d, List<string> sel)
