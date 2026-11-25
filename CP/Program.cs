@@ -114,11 +114,47 @@ namespace CenterPoint
         }
     }
 
+    // قياس الأداء: يسجّل العمليات البطيئة (≥150ms) في perf.log لمعرفة أين يضيع الوقت
+    static class Perf
+    {
+        static readonly object _lock = new object();
+        public static bool Enabled = true;
+        static string _path;
+        static string PathFile()
+        {
+            if (_path != null) return _path;
+            try
+            {
+                string docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string dir = Path.Combine(docs, "CenterPoint Transfer", "exports");
+                Directory.CreateDirectory(dir);
+                _path = Path.Combine(dir, "perf.log");
+            }
+            catch { _path = "perf.log"; }
+            return _path;
+        }
+        public static void Log(string what, long ms)
+        {
+            if (!Enabled || ms < 150) return;
+            try
+            {
+                string s = what ?? ""; if (s.Length > 120) s = s.Substring(0, 120);
+                string line = DateTime.Now.ToString("HH:mm:ss.fff") + "  " + ms.ToString().PadLeft(6) + " ms  " + s;
+                lock (_lock) File.AppendAllText(PathFile(), line + Environment.NewLine, new UTF8Encoding(false));
+            }
+            catch { }
+        }
+    }
+
     static class Shell
     {
         // timeoutMs: مهلة زمنية تمنع تعليق البرنامج إذا توقف الأمر (مثلاً فصل الجهاز)
         public static (bool ok, string outp) Run(string file, string args, int timeoutMs = 120000)
         {
+            var _sw = System.Diagnostics.Stopwatch.StartNew();
+            string _label = file + " " + (args ?? "");
+            try
+            {
             if (file == "adb") file = AdbExe();
             try
             {
@@ -151,6 +187,8 @@ namespace CenterPoint
                 }
             }
             catch (Exception ex) { return (false, "تعذّر تشغيل " + file + ": " + ex.Message); }
+            }
+            finally { Perf.Log(_label, _sw.ElapsedMilliseconds); }
         }
         public static string Q(string s) { return "\"" + s + "\""; }
 
@@ -327,11 +365,17 @@ namespace CenterPoint
 
         public static List<Device> All()
         {
+            var _sw = System.Diagnostics.Stopwatch.StartNew();
             ClearPropCache();                 // تحديث: أعد قراءة خصائص الأجهزة من جديد
             ClearTtl();                        // وأعد قراءة البطارية/التخزين/الذاكرة
-            var l = ListAndroid();
-            l.AddRange(ListIos());
+            var s1 = System.Diagnostics.Stopwatch.StartNew();
+            var l = ListAndroid(); Perf.Log("ListAndroid (" + l.Count + ")", s1.ElapsedMilliseconds);
+            var s2 = System.Diagnostics.Stopwatch.StartNew();
+            l.AddRange(ListIos()); Perf.Log("ListIos", s2.ElapsedMilliseconds);
+            var s3 = System.Diagnostics.Stopwatch.StartNew();
             try { l.AddRange(ListMtp()); } catch { }
+            Perf.Log("ListMtp", s3.ElapsedMilliseconds);
+            Perf.Log("Devices.All TOTAL (" + l.Count + " جهاز)", _sw.ElapsedMilliseconds);
             return l;
         }
 
