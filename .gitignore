@@ -29,3 +29,6 @@ logs/
 # OS/editor
 .DS_Store
 Thumbs.db
+
+CenterPoint_V12_FINAL.zip
+*.zip
