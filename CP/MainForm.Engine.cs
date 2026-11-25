@@ -234,9 +234,32 @@ namespace CenterPoint
         void Log(string m) { if (log.InvokeRequired) { log.BeginInvoke(new Action(() => Log(m))); return; } log.AppendText(m + "\r\n"); }
         void SetProgress(double p) { if (bar.InvokeRequired) { bar.BeginInvoke(new Action(() => SetProgress(p))); return; } int v = (int)Math.Max(0, Math.Min(100, p)); bar.Value = v; lblPct.Text = v + "%"; }
 
-        void Refresh2()
+        volatile bool _refreshing;
+
+        // تحديث غير متزامن: الكشف (adb/MTP) على خيط خلفي كي لا تتجمّد الواجهة
+        void Refresh2(Action after = null)
         {
-            devices = Devices.All();
+            if (cbSrc != null && cbSrc.InvokeRequired) { cbSrc.BeginInvoke(new Action(() => Refresh2(after))); return; }
+            if (_refreshing) { if (after != null) after(); return; }
+            _refreshing = true;
+            try { Log("جاري تحديث الأجهزة..."); } catch { }
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                List<Device> devs;
+                try { devs = Devices.All(); } catch { devs = new List<Device>(); }
+                try
+                {
+                    if (IsHandleCreated) BeginInvoke(new Action(() => { ApplyDevices(devs); _refreshing = false; if (after != null) after(); }));
+                    else { _refreshing = false; }
+                }
+                catch { _refreshing = false; }
+            });
+        }
+
+        // تعبئة القوائم — تعمل على خيط الواجهة فقط
+        void ApplyDevices(List<Device> devs)
+        {
+            devices = devs ?? new List<Device>();
             var labels = devices.Select(d => (object)d.ToString()).ToArray();
             cbSrc.Items.Clear(); cbDst.Items.Clear(); cbDev.Items.Clear();
             galSrc.Items.Clear(); galDst.Items.Clear(); bkDev.Items.Clear();

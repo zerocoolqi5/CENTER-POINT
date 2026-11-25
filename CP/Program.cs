@@ -327,16 +327,41 @@ namespace CenterPoint
 
         public static List<Device> All()
         {
+            ClearPropCache();                 // تحديث: أعد قراءة خصائص الأجهزة من جديد
             var l = ListAndroid();
             l.AddRange(ListIos());
             try { l.AddRange(ListMtp()); } catch { }
             return l;
         }
 
+        // تخزين مؤقت لمخرجات getprop: إطلاق adb واحد لكل جهاز بدل إطلاق لكل خاصية
+        static readonly Dictionary<string, Dictionary<string, string>> _propCache = new Dictionary<string, Dictionary<string, string>>();
+        public static void ClearPropCache(string id = null)
+        {
+            lock (_propCache) { if (id == null) _propCache.Clear(); else _propCache.Remove(id); }
+        }
+        static Dictionary<string, string> LoadProps(string id)
+        {
+            var d = new Dictionary<string, string>();
+            try
+            {
+                var r = Shell.Run("adb", "-s " + id + " shell getprop", 15000);
+                if (r.ok && !string.IsNullOrEmpty(r.outp))
+                    foreach (Match m in Regex.Matches(r.outp, @"\[([^\]]+)\]:\s*\[([^\]]*)\]"))
+                        d[m.Groups[1].Value] = m.Groups[2].Value;
+            }
+            catch { }
+            return d;
+        }
         public static string Prop(Device d, string key)
         {
-            var r = Shell.Run("adb", "-s " + d.Id + " shell getprop " + key);
-            return r.ok ? r.outp.Trim() : "";
+            if (d == null || string.IsNullOrEmpty(d.Id)) return "";
+            Dictionary<string, string> p;
+            lock (_propCache)
+            {
+                if (!_propCache.TryGetValue(d.Id, out p)) { p = LoadProps(d.Id); _propCache[d.Id] = p; }
+            }
+            string v; return p.TryGetValue(key, out v) ? (v ?? "").Trim() : "";
         }
 
         public static string Ram(Device d)
@@ -934,7 +959,7 @@ namespace CenterPoint
             cbDev.SelectedIndexChanged += (s, e) => { LoadInfo(); infoPhone.Invalidate(); };
             pageInfo.Controls.Add(cbDev);
             var rf = new Button { Text = "🔄", Location = new Point(70, 42), Size = new Size(70, 28), BackColor = BLUE, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Arial", 10, FontStyle.Bold) };
-            rf.FlatAppearance.BorderSize = 0; rf.Click += (s, e) => { Refresh2(); LoadInfo(); infoPhone.Invalidate(); };
+            rf.FlatAppearance.BorderSize = 0; rf.Click += (s, e) => Refresh2(() => { LoadInfo(); infoPhone.Invalidate(); });
             pageInfo.Controls.Add(rf);
 
             // رسمة الهاتف (أسلوب MobileTrans)
@@ -2155,7 +2180,7 @@ namespace CenterPoint
             else if (cmd == "quick") { RunQuick(kind); }
             else if (cmd == "startTransfer") StartTransferWeb(src, dst, catList);
             else if (cmd == "cancelTransfer") xferCancel = true;
-            else if (cmd == "refreshXfer") { Refresh2(); SendXferDevices(); }
+            else if (cmd == "refreshXfer") { Refresh2(() => SendXferDevices()); }
             else if (cmd == "openReport") OpenLastReport();
         }
 
@@ -3854,7 +3879,7 @@ namespace CenterPoint
             fmDev.SelectedIndexChanged += (s, e) => { fmPath = "/sdcard"; FmLoad(); };
             pageFiles.Controls.Add(fmDev);
             var rf = new Button { Text = "🔄", Location = new Point(40, 46), Size = new Size(70, 28), BackColor = BLUE, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Arial", 10, FontStyle.Bold) };
-            rf.FlatAppearance.BorderSize = 0; rf.Click += (s, e) => { Refresh2(); FmLoad(); };
+            rf.FlatAppearance.BorderSize = 0; rf.Click += (s, e) => Refresh2(() => FmLoad());
             pageFiles.Controls.Add(rf);
 
             var goBtn = new Button { Text = "اذهب", Location = new Point(40, 82), Size = new Size(90, 30), BackColor = GREEN, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Arial", 9, FontStyle.Bold) };
