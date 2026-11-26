@@ -47,7 +47,8 @@ CS_FILES = sorted(glob.glob(os.path.join(ROOT, "*.cs")))
 
 # 1) توازن الأقواس
 for f in CS_FILES:
-    t = strip_code(open(f, encoding='utf-8').read())
+    with open(f, encoding='utf-8') as file:
+        t = strip_code(file.read())
     for op, cl, name in [('(', ')', '()'), ('{', '}', '{}'), ('[', ']', '[]')]:
         if t.count(op) != t.count(cl):
             fail("توازن {} مختل في {}: {} مقابل {}".format(name, os.path.basename(f), t.count(op), t.count(cl)))
@@ -62,7 +63,8 @@ seen = {}
 TYPE_KEYWORDS = {"if", "for", "while", "switch", "catch", "using", "lock", "foreach", "return", "else", "do", "fixed"}
 SKIP_NAMES = {"OnPaint", "ToString", "Dispose", "Main", "Equals", "GetHashCode"}
 for f in CS_FILES:
-    src = open(f, encoding='utf-8').read()
+    with open(f, encoding='utf-8') as file:
+        src = file.read()
     lines = src.splitlines()
     if "partial class MainForm" not in src:
         continue  # ملف بلا MainForm — لا نفحص تكراره هنا
@@ -94,7 +96,8 @@ NEED = {
     "LinearGradientBrush": "System.Drawing.Drawing2D",
 }
 for f in CS_FILES:
-    src = open(f, encoding='utf-8').read()
+    with open(f, encoding='utf-8') as file:
+        src = file.read()
     usings = "\n".join(l for l in src.splitlines() if l.strip().startswith("using "))
     body = strip_code(src)
     for sym, ns in NEED.items():
@@ -106,14 +109,16 @@ for f in CS_FILES:
             fail("{}: يستخدم {} بلا `using {};`".format(os.path.basename(f), sym, ns))
 
 # 4) تطابق الإصدار
-csproj = open(os.path.join(ROOT, "CenterPoint.csproj"), encoding='utf-8').read()
+with open(os.path.join(ROOT, "CenterPoint.csproj"), encoding='utf-8') as file:
+    csproj = file.read()
 mver = re.search(r'<Version>([\d.]+)</Version>', csproj)
 ver = mver.group(1) if mver else None
 if not ver:
     fail("لا يوجد <Version> في csproj")
 iss_path = os.path.join(ROOT, "CenterPoint_Setup.iss")
 if os.path.exists(iss_path) and ver:
-    iss = open(iss_path, encoding='utf-8').read()
+    with open(iss_path, encoding='utf-8') as file:
+        iss = file.read()
     miss = re.search(r'#define\s+AppVer\s+"([\d.]+)"', iss)
     if miss and miss.group(1) != ver:
         fail("إصدار المثبّت {} لا يطابق csproj {}".format(miss.group(1), ver))
@@ -132,7 +137,8 @@ if 'EmbeddedResource Include="ui\\index.html"' not in csproj and 'EmbeddedResour
 # 7) workflow الإصدار
 by = os.path.join(ROOT, "..", ".github", "workflows", "build.yml")
 if os.path.exists(by):
-    w = open(by, encoding='utf-8').read()
+    with open(by, encoding='utf-8') as file:
+        w = file.read()
     for need in [".exe", ".sha256", "version.txt"]:
         if need not in w:
             fail("build.yml لا ينشر {}".format(need))
