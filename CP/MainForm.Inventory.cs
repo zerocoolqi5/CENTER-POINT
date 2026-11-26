@@ -124,7 +124,7 @@ namespace CenterPoint
         void InAddOrUpdate()
         {
             string name = (ptName.Text ?? "").Trim();
-            if (name == "") { MessageBox.Show("اكتب اسم القطعة.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(name)) { MessageBox.Show("اكتب اسم القطعة.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             if (ptEditId != "")
             {
                 var p = partList.FirstOrDefault(x => x.Id == ptEditId);

@@ -137,7 +137,7 @@ namespace CenterPoint
                             }
                     }
                     string latest = (tag ?? "").TrimStart('v', 'V').Trim();
-                    if (latest == "")
+                    if (string.IsNullOrWhiteSpace(latest))
                     {
                         if (!silent) MessageBox.Show("لم يُعثر على إصدارات منشورة بعد.", "التحديثات", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
@@ -216,7 +216,7 @@ namespace CenterPoint
             // يعمل فقط على ملف exe (النشر single-file). في وضع التطوير نفتح الصفحة بدل ذلك.
             if (string.IsNullOrEmpty(exePath) || !exePath.ToLowerInvariant().EndsWith(".exe"))
             {
-                OpenUrl(htmlUrl != "" ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
+                OpenUrl(!string.IsNullOrWhiteSpace(htmlUrl) ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
                 return;
             }
 
@@ -286,7 +286,7 @@ namespace CenterPoint
             {
                 try { baseTitle = "CENTER POINT TRANSFER V12.0.0 PRO - سنتر بوينت"; Text = baseTitle; } catch { }
                 ErrBox("تعذّر التحديث التلقائي: " + ex.Message + "\r\nيمكنك التحميل يدوياً من صفحة الإصدار.");
-                OpenUrl(htmlUrl != "" ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
+                OpenUrl(!string.IsNullOrWhiteSpace(htmlUrl) ? htmlUrl : "https://github.com/" + GhOwner + "/" + GhRepo + "/releases/latest");
             }
         }
     }

@@ -107,7 +107,7 @@ namespace CenterPoint
                     foreach (var ln in (ad.outp ?? "").Replace("\r", "").Split('\n'))
                     {
                         var t = ln.Trim();
-                        if (t == "" || t.StartsWith("List of")) continue;
+                        if (string.IsNullOrWhiteSpace(t) || t.StartsWith("List of")) continue;
                         var p = t.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                         if (p.Length < 2) continue;
                         adbCount++;
@@ -132,7 +132,7 @@ namespace CenterPoint
                     foreach (var ln in (fb.outp ?? "").Replace("\r", "").Split('\n'))
                     {
                         var t = ln.Trim();
-                        if (t == "") continue;
+                        if (string.IsNullOrWhiteSpace(t)) continue;
                         var p = t.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                         if (p.Length < 1) continue;
                         fbCount++;
@@ -249,7 +249,7 @@ namespace CenterPoint
             var d = GetSingleAndroidTarget();
             if (d == null) return;
             string cmd = (adbCmd == null ? "" : adbCmd.Text).Trim();
-            if (cmd == "") { MessageBox.Show("اكتب أمر shell.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(cmd)) { MessageBox.Show("اكتب أمر shell.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             SetTb(adbResult, "$ adb shell " + cmd + "\r\n...");
             Task.Run(() =>
             {

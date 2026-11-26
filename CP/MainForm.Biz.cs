@@ -199,7 +199,7 @@ namespace CenterPoint
             bzResults.Items.Clear();
             try
             {
-                if (q == "")
+                if (string.IsNullOrWhiteSpace(q))
                 {
                     // لا بحث: اعرض المخزون المنخفض + آخر الفواتير
                     var low = partList.Where(p => p.Qty <= p.MinQty).ToList();

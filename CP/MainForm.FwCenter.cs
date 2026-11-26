@@ -234,7 +234,7 @@ namespace CenterPoint
 
         void FwCheckCompat()
         {
-            if (fwCompFile == "" || !File.Exists(fwCompFile)) { MessageBox.Show("اختر ملف فيرموير أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(fwCompFile) || !File.Exists(fwCompFile)) { MessageBox.Show("اختر ملف فيرموير أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             var sb = new StringBuilder();
             sb.AppendLine("═══ تحقّق التوافق (مبدئي) ═══");
             sb.AppendLine("");
@@ -244,7 +244,7 @@ namespace CenterPoint
             sb.AppendLine("● الملف: " + fname);
             sb.AppendLine("● النوع: " + ftype);
             sb.AppendLine("");
-            if (fwDetModel == "") sb.AppendLine("⚠ لم يُكشف الجهاز بعد — اضغط «كشف الجهاز» لمطابقة أدق.");
+            if (string.IsNullOrWhiteSpace(fwDetModel)) sb.AppendLine("⚠ لم يُكشف الجهاز بعد — اضغط «كشف الجهاز» لمطابقة أدق.");
             else
             {
                 string mTok = FwModelToken(fwDetModel);
@@ -376,7 +376,7 @@ namespace CenterPoint
         void FwLibAdd()
         {
             string model = fwLibModel.Text.Trim();
-            if (model == "" && fwLibPath == "") { MessageBox.Show("اكتب الموديل أو اختر ملفاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(model) && string.IsNullOrWhiteSpace(fwLibPath)) { MessageBox.Show("اكتب الموديل أو اختر ملفاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             long sz = 0; try { if (fwLibPath != "") sz = new FileInfo(fwLibPath).Length; } catch { }
             fwLib.Insert(0, new FwEntry { Model = model, Android = fwLibAndroid.Text.Trim(), Chipset = fwLibChip.Text.Trim(), Path = fwLibPath, Size = sz, Md5 = "", Note = fwLibNote.Text.Trim(), Added = DateTime.Now.ToString("yyyy-MM-dd HH:mm") });
             FwLibSave(); FwLibRefresh();
@@ -408,7 +408,7 @@ namespace CenterPoint
         List<FwEntry> FwLibShown()
         {
             string q = (fwLibSearch != null ? fwLibSearch.Text : "").Trim().ToLowerInvariant();
-            if (q == "") return fwLib.ToList();
+            if (string.IsNullOrWhiteSpace(q)) return fwLib.ToList();
             return fwLib.Where(x => ((x.Model ?? "") + " " + (x.Android ?? "") + " " + (x.Chipset ?? "") + " " + (x.Note ?? "")).ToLowerInvariant().Contains(q)).ToList();
         }
 
@@ -588,7 +588,7 @@ namespace CenterPoint
                 {
                     var d = devices.FirstOrDefault(x => x.Kind == "android");
                     string model = d != null ? Devices.Prop(d, "ro.product.model") : "";
-                    sb.AppendLine("● الحالة: النظام يعمل طبيعي ✔  " + (model != "" ? "(" + model + ")" : ""));
+                    sb.AppendLine("● الحالة: النظام يعمل طبيعي ✔  " + (!string.IsNullOrWhiteSpace(model) ? "(" + model + ")" : ""));
                     sb.AppendLine("");
                     sb.AppendLine("── فحص صحة موسّع (قراءة فقط) ──");
                     try
@@ -609,19 +609,19 @@ namespace CenterPoint
                         }
                         // تشفير
                         string crypto = (Shell.Run("adb", "shell getprop ro.crypto.state", 8000).outp ?? "").Trim();
-                        if (crypto != "") sb.AppendLine("🔐 التشفير: " + (crypto == "encrypted" ? "مُشفّر (طبيعي)" : crypto));
+                        if (!string.IsNullOrWhiteSpace(crypto)) sb.AppendLine("🔐 التشفير: " + (crypto == "encrypted" ? "مُشفّر (طبيعي)" : crypto));
                         // حالة قفل البوتلودر
                         string locked = (Shell.Run("adb", "shell getprop ro.boot.flash.locked", 8000).outp ?? "").Trim();
                         string vbs = (Shell.Run("adb", "shell getprop ro.boot.verifiedbootstate", 8000).outp ?? "").Trim();
-                        if (locked != "" || vbs != "")
-                            sb.AppendLine("🔒 البوتلودر: " + (locked == "1" ? "مقفل (locked)" : locked == "0" ? "مفتوح (unlocked)" : "?") + (vbs != "" ? "  ·  verifiedboot: " + vbs : ""));
+                        if (!string.IsNullOrWhiteSpace(locked) || !string.IsNullOrWhiteSpace(vbs))
+                            sb.AppendLine("🔒 البوتلودر: " + (locked == "1" ? "مقفل (locked)" : locked == "0" ? "مفتوح (unlocked)" : "?") + (!string.IsNullOrWhiteSpace(vbs) ? "  ·  verifiedboot: " + vbs : ""));
                         // شريحة
                         if (d != null)
                         {
                             string plat = Devices.Prop(d, "ro.board.platform");
                             string hw = Devices.Prop(d, "ro.hardware");
                             string fam = FwChipFamily(plat, hw);
-                            if (fam != "" && fam != "unknown") sb.AppendLine("🧩 الشريحة: " + fam + (plat != "" ? " (" + plat + ")" : ""));
+                            if (!string.IsNullOrWhiteSpace(fam) && fam != "unknown") sb.AppendLine("🧩 الشريحة: " + fam + (!string.IsNullOrWhiteSpace(plat) ? " (" + plat + ")" : ""));
                         }
                     }
                     catch (Exception exh) { sb.AppendLine("(تعذّر بعض فحوصات الصحة: " + exh.Message + ")"); }
@@ -702,7 +702,7 @@ namespace CenterPoint
         void FlashLogAdd()
         {
             string model = fwLogModelB.Text.Trim();
-            if (model == "") { MessageBox.Show("اكتب الموديل.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(model)) { MessageBox.Show("اكتب الموديل.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             string serial = fwLogSerialB != null ? fwLogSerialB.Text.Trim() : "";
             flashLog.Insert(0, new FlashOp { Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"), Model = model, Serial = serial, Tool = fwLogToolC.Text, Firmware = fwLogFwB.Text.Trim(), Result = fwLogResultC.Text, Note = fwLogNoteB.Text.Trim() });
             FlashLogSave(); FlashLogRefresh();
@@ -717,11 +717,11 @@ namespace CenterPoint
             {
                 var d = DeviceDetect();
                 if (d == null || !d.Present) { MessageBox.Show("لا يوجد جهاز متصل قابل للكشف (فعّل تصحيح USB أو ضع الجهاز بوضع fastboot/recovery).", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-                string model = (d.Mfr + " " + d.Model).Trim(); if (model == "") model = d.Model;
+                string model = (d.Mfr + " " + d.Model).Trim(); if (string.IsNullOrWhiteSpace(model)) model = d.Model;
                 if (fwLogModelB != null && model != "") fwLogModelB.Text = model;
                 if (fwLogSerialB != null && !string.IsNullOrEmpty(d.Serial)) fwLogSerialB.Text = d.Serial;
                 string chip = string.IsNullOrEmpty(d.ChipFamily) ? "" : "  شريحة: " + d.ChipFamily;
-                if (fwLogNoteB != null && chip != "" && fwLogNoteB.Text.Trim() == "") fwLogNoteB.Text = "شريحة " + d.ChipFamily + (d.Android != "" ? " · أندرويد " + d.Android : "");
+                if (fwLogNoteB != null && chip != "" && string.IsNullOrWhiteSpace(fwLogNoteB.Text)) fwLogNoteB.Text = "شريحة " + d.ChipFamily + (d.Android != "" ? " · أندرويد " + d.Android : "");
                 LogOp("جلب هوية جهاز للسجل: " + model);
             }
             catch (Exception ex) { ErrBox("تعذّر جلب هوية الجهاز: " + ex.Message); }
@@ -750,7 +750,7 @@ namespace CenterPoint
             int shown = 0;
             foreach (var x in flashLog)
             {
-                if (flt != "")
+                if (!string.IsNullOrWhiteSpace(flt))
                 {
                     bool m = (x.Model ?? "").IndexOf(flt, StringComparison.OrdinalIgnoreCase) >= 0
                           || (x.Serial ?? "").IndexOf(flt, StringComparison.OrdinalIgnoreCase) >= 0
@@ -760,7 +760,7 @@ namespace CenterPoint
                 shown++;
                 fwLogList.Items.Add((x.Date ?? "") + "  |  " + (x.Model ?? "") + (string.IsNullOrEmpty(x.Serial) ? "" : "  [" + x.Serial + "]") + "  |  " + (x.Tool ?? "") + "  |  " + (x.Result ?? "") + (string.IsNullOrEmpty(x.Firmware) ? "" : "  |  " + x.Firmware) + (string.IsNullOrEmpty(x.Note) ? "" : "  — " + x.Note));
             }
-            if (flt != "" && shown == 0) fwLogList.Items.Add("لا عمليات مطابقة لـ: " + flt);
+            if (!string.IsNullOrWhiteSpace(flt) && shown == 0) fwLogList.Items.Add("لا عمليات مطابقة لـ: " + flt);
         }
 
         // تصدير سجل التفليش HTML (يحترم الفلترة الحالية)

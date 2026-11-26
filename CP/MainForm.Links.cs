@@ -87,7 +87,7 @@ namespace CenterPoint
                 phone = tkPhone != null ? tkPhone.Text.Trim() : "";
                 dev = tkDevice != null ? tkDevice.Text.Trim() : "";
             }
-            if (cust == "")
+            if (string.IsNullOrWhiteSpace(cust))
             {
                 MessageBox.Show("اختر تذكرة من القائمة أو اكتب زبوناً أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;

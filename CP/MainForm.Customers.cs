@@ -109,7 +109,7 @@ namespace CenterPoint
         void CuAddOrUpdate()
         {
             string name = (cuName.Text ?? "").Trim();
-            if (name == "") { MessageBox.Show("اكتب اسم الزبون.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(name)) { MessageBox.Show("اكتب اسم الزبون.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
             if (cuEditId != "")
             {

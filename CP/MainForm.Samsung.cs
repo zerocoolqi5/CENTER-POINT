@@ -126,7 +126,7 @@ namespace CenterPoint
         void SmSearch()
         {
             string m = (smModel.Text ?? "").Trim();
-            if (m == "") { MessageBox.Show("اكتب الموديل أولاً (مثال: SM-A346E).", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(m)) { MessageBox.Show("اكتب الموديل أولاً (مثال: SM-A346E).", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             string q = Uri.EscapeDataString(m + " firmware flash file");
             SmOpenUrl("https://www.google.com/search?q=" + q);
             SmOpenUrl("https://www.needrom.com/?s=" + Uri.EscapeDataString(m));
