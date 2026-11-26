@@ -110,7 +110,7 @@ namespace CenterPoint
         {
             string name = (cuName.Text ?? "").Trim();
             if (name == "") { MessageBox.Show("اكتب اسم الزبون.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+            string now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm");
             if (cuEditId != "")
             {
                 var c = customerList.FirstOrDefault(x => x.Id == cuEditId);
@@ -118,7 +118,7 @@ namespace CenterPoint
             }
             else
             {
-                customerList.Insert(0, new Customer { Id = DateTime.Now.ToString("yyMMddHHmmss"), Name = name, Phone = cuPhone.Text.Trim(), Note = cuNote.Text.Trim(), Created = now });
+                customerList.Insert(0, new Customer { Id = DateTime.UtcNow.ToString("yyMMddHHmmss"), Name = name, Phone = cuPhone.Text.Trim(), Note = cuNote.Text.Trim(), Created = now });
             }
             CustomersSave(); CustomersRefreshList(); CuClear();
             LogOp("زبون: " + name);

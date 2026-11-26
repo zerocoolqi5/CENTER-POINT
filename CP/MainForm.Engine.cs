@@ -347,11 +347,11 @@ namespace CenterPoint
             try
             {
                 string exports = ExportsDir;
-                string stamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
+                string stamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm");
                 string path = Path.Combine(exports, "CenterPoint_Report_" + stamp + ".txt");
                 var sb = new StringBuilder();
                 sb.AppendLine("تقرير نقل البيانات - سنتر بوينت");
-                sb.AppendLine("التاريخ: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+                sb.AppendLine("التاريخ: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm"));
                 sb.AppendLine("من: " + s.Model);
                 sb.AppendLine("إلى: " + d.Model);
                 sb.AppendLine("----------------------------------------");
@@ -376,7 +376,7 @@ namespace CenterPoint
             try
             {
                 string exports = ExportsDir;
-                string stamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string stamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
                 string path = Path.Combine(exports, "CenterPoint_Report_" + stamp + ".txt");
                 var sb = new StringBuilder();
                 sb.AppendLine("========================================");
@@ -384,7 +384,7 @@ namespace CenterPoint
                 sb.AppendLine("========================================");
                 string sEng = s.Kind == "ios" ? "ios" : (s.Kind == "mtp" ? "mtp" : "adb");
                 string dEng = d.Kind == "ios" ? "ios" : (d.Kind == "mtp" ? "mtp" : "adb");
-                sb.AppendLine("التاريخ: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                sb.AppendLine("التاريخ: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
                 sb.AppendLine("من:  " + s.Model + "   (" + s.Id + ")   [" + EngName(sEng) + "]");
                 sb.AppendLine("إلى: " + d.Model + "   (" + d.Id + ")   [" + EngName(dEng) + "]");
                 sb.AppendLine("وضع النقل: المصدر " + EngName(sEng) + "  →  الوجهة " + EngName(dEng));
@@ -459,7 +459,7 @@ namespace CenterPoint
             List<TransferHist> hist;
             try { hist = File.Exists(TransferHistJson) ? (System.Text.Json.JsonSerializer.Deserialize<List<TransferHist>>(File.ReadAllText(TransferHistJson)) ?? new List<TransferHist>()) : new List<TransferHist>(); }
             catch { hist = new List<TransferHist>(); }
-            hist.Insert(0, new TransferHist { Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"), From = s != null ? s.Model : "", To = d != null ? d.Model : "", Total = total, Ok = ok, Fail = fail, Bytes = bytes, Secs = secs });
+            hist.Insert(0, new TransferHist { Date = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm"), From = s != null ? s.Model : "", To = d != null ? d.Model : "", Total = total, Ok = ok, Fail = fail, Bytes = bytes, Secs = secs });
             if (hist.Count > 500) hist = hist.Take(500).ToList();
             try { File.WriteAllText(TransferHistJson, System.Text.Json.JsonSerializer.Serialize(hist, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(true)); }
             catch { }
@@ -494,7 +494,7 @@ namespace CenterPoint
             try
             {
                 Directory.CreateDirectory(tmp);
-                var t0 = DateTime.Now;
+                var t0 = DateTime.UtcNow;
                 xStart = t0; xTotal = 0; xDone = 0; xBytes = 0; xferCancel = false;
                 Log(""); Log("من " + s.Model + "  ←  إلى " + d.Model + "  (" + t0.ToString("HH:mm:ss") + ")");
                 // === المحرّك الموحّد: يكتشف مسار كل جهاز تلقائياً ويوجّه عبره (ADB / MTP / Apple) ===
@@ -752,7 +752,7 @@ namespace CenterPoint
                     Log("الملفات المنقولة قبل التوقّف تبقى على الجهاز؛ أعد النقل لإكمال الباقي.");
                     LogOp(why + " (" + okCount + " ملف)");
                     // تقرير نهائي حتى عند الإلغاء/الانقطاع
-                    double asecs = (DateTime.Now - t0).TotalSeconds;
+                    double asecs = (DateTime.UtcNow - t0).TotalSeconds;
                     failed.Insert(0, "⚠ " + why + " — العملية لم تكتمل");
                     string arep = SaveReportDetailed(s, d, total, okCount, failCount, totalBytes, asecs, catStats, failed);
                     xLastReport = arep;
@@ -762,7 +762,7 @@ namespace CenterPoint
                 }
 
                 SetProgress(100); SetCurrent("✅ اكتمل النقل");
-                double secs = (DateTime.Now - t0).TotalSeconds;
+                double secs = (DateTime.UtcNow - t0).TotalSeconds;
                 Log(""); Log("═══════ التقرير المفصّل ═══════");
                 foreach (var cs in catStats) Log("• " + cs.name + ": " + cs.ok + "/" + cs.total + " ملف  (" + FmtSize(cs.bytes) + ")" + (cs.fail > 0 ? "  فشل " + cs.fail : ""));
                 Log("────────────────────────");

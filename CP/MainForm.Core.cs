@@ -48,7 +48,7 @@ namespace CenterPoint
         {
             try
             {
-                string stamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string stamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
                 string line = "[" + level + "] " + stamp + " | " + (msg ?? "");
                 lock (_logLock)
                 {
@@ -59,7 +59,7 @@ namespace CenterPoint
                     if (level == "ERR" || level == "WARN")
                         File.AppendAllText(Path.Combine(ExportsDir, "errors.log"), line + Environment.NewLine, new UTF8Encoding(false));
                     else
-                        File.AppendAllText(Path.Combine(ExportsDir, "operations.log"), (msg ?? "") + "|" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + Environment.NewLine, new UTF8Encoding(false));
+                        File.AppendAllText(Path.Combine(ExportsDir, "operations.log"), (msg ?? "") + "|" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + Environment.NewLine, new UTF8Encoding(false));
                 }
             }
             catch { /* السجل أفضل جهد — لا يوقف العمل */ }

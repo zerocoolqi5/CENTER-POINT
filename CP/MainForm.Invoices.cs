@@ -190,7 +190,7 @@ namespace CenterPoint
             if (cust == "") { MessageBox.Show("اكتب اسم الزبون.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             if (ivCurrentItems.Count == 0) { MessageBox.Show("أضف بنداً واحداً على الأقل.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             double total = IvItemsSum() + ParseD(ivLabor.Text);
-            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+            string now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm");
             if (ivEditId != "")
             {
                 var v = invoiceList.FirstOrDefault(x => x.Id == ivEditId);
@@ -202,7 +202,7 @@ namespace CenterPoint
             }
             else
             {
-                invoiceList.Insert(0, new Invoice { Id = DateTime.Now.ToString("yyMMddHHmmss"), Customer = cust, Phone = ivPhone.Text.Trim(), Device = ivDevice.Text.Trim(), Items = new List<InvItem>(ivCurrentItems), Labor = ParseD(ivLabor.Text), Total = total, Created = now });
+                invoiceList.Insert(0, new Invoice { Id = DateTime.UtcNow.ToString("yyMMddHHmmss"), Customer = cust, Phone = ivPhone.Text.Trim(), Device = ivDevice.Text.Trim(), Items = new List<InvItem>(ivCurrentItems), Labor = ParseD(ivLabor.Text), Total = total, Created = now });
                 IvDeductStock();   // خصم قطع المخزون — للفواتير الجديدة فقط
             }
             InvoicesSave(); InvoicesRefreshList(); IvClear();
@@ -256,7 +256,7 @@ namespace CenterPoint
             sb.Append("th{background:#eef3fb}.tot{font-size:18px;font-weight:bold;color:#0a8a3a;margin-top:14px;text-align:left}");
             sb.Append(".muted{color:#666;font-size:13px}</style></head><body>");
             sb.Append("<div class='h'><div><h1>سنتر بوينت للاتصالات</h1><div class='muted'>Center Point — فاتورة صيانة</div></div>");
-            sb.Append("<div class='muted'>التاريخ: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "<br>هاتف المحل: 0782 915 5923</div></div>");
+            sb.Append("<div class='muted'>التاريخ: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + "<br>هاتف المحل: 0782 915 5923</div></div>");
             sb.Append("<p><b>الزبون:</b> " + Esc(cust) + " &nbsp; <b>الهاتف:</b> " + Esc(ivPhone.Text.Trim()) + " &nbsp; <b>الجهاز:</b> " + Esc(ivDevice.Text.Trim()) + "</p>");
             sb.Append("<table><tr><th>البند</th><th>الكمية</th><th>السعر</th><th>المجموع</th></tr>");
             foreach (var it in ivCurrentItems)
@@ -268,7 +268,7 @@ namespace CenterPoint
             sb.Append("</body></html>");
             try
             {
-                string path = Path.Combine(ExportsDir, "invoice_" + DateTime.Now.ToString("yyMMddHHmmss") + ".html");
+                string path = Path.Combine(ExportsDir, "invoice_" + DateTime.UtcNow.ToString("yyMMddHHmmss") + ".html");
                 File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
                 Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
                 LogOp("طباعة فاتورة: " + cust);
