@@ -105,7 +105,7 @@ namespace CenterPoint
         {
             try
             {
-                DateTime now = DateTime.Now;
+                DateTime now = DateTime.UtcNow;
                 double tDay = 0, tMonth = 0, tYear = 0, tAll = 0, labSum = 0, itemsSum = 0, maxInv = 0;
                 int cnt = 0;
                 foreach (var v in invoiceList)
@@ -237,7 +237,7 @@ namespace CenterPoint
         {
             try
             {
-                DateTime now = DateTime.Now;
+                DateTime now = DateTime.UtcNow;
                 double tDay = 0, tMonth = 0, tYear = 0, tAll = 0, labSum = 0, itemsSum = 0, maxInv = 0; int cnt = 0;
                 foreach (var v in invoiceList)
                 {

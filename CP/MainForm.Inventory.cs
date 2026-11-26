@@ -132,7 +132,7 @@ namespace CenterPoint
             }
             else
             {
-                partList.Insert(0, new Part { Id = DateTime.Now.ToString("yyMMddHHmmss"), Name = name, Sku = ptSku.Text.Trim(), Qty = ParseI(ptQty.Text), MinQty = ParseI(ptMin.Text), Price = ParseD(ptPrice.Text), Note = ptNote.Text.Trim() });
+                partList.Insert(0, new Part { Id = DateTime.UtcNow.ToString("yyMMddHHmmss"), Name = name, Sku = ptSku.Text.Trim(), Qty = ParseI(ptQty.Text), MinQty = ParseI(ptMin.Text), Price = ParseD(ptPrice.Text), Note = ptNote.Text.Trim() });
             }
             InventorySave(); InventoryRefreshList(); InClear();
             LogOp("مخزون: " + name);

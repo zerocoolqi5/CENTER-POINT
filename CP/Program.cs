@@ -139,7 +139,7 @@ namespace CenterPoint
             try
             {
                 string s = what ?? ""; if (s.Length > 120) s = s.Substring(0, 120);
-                string line = DateTime.Now.ToString("HH:mm:ss.fff") + "  " + ms.ToString().PadLeft(6) + " ms  " + s;
+                string line = DateTime.UtcNow.ToString("HH:mm:ss.fff") + "  " + ms.ToString().PadLeft(6) + " ms  " + s;
                 lock (_lock) File.AppendAllText(PathFile(), line + Environment.NewLine, new UTF8Encoding(false));
             }
             catch { }
@@ -302,8 +302,8 @@ namespace CenterPoint
         // انتظار عودة جهاز ADB بعد انقطاع قصير (يرجع true إذا عاد خلال المهلة)
         public static bool WaitForAdb(Device d, int seconds)
         {
-            var until = DateTime.Now.AddSeconds(seconds);
-            while (DateTime.Now < until)
+            var until = DateTime.UtcNow.AddSeconds(seconds);
+            while (DateTime.UtcNow < until)
             {
                 var r = Shell.Run("adb", "devices", 10000);
                 if (r.ok && Regex.IsMatch(r.outp, Regex.Escape(d.Id) + @"\s+device")) return true;
@@ -420,10 +420,10 @@ namespace CenterPoint
             lock (_ttl)
             {
                 KeyValuePair<DateTime, object> e;
-                if (_ttl.TryGetValue(key, out e) && (DateTime.Now - e.Key).TotalSeconds < ttlSec) return (T)e.Value;
+                if (_ttl.TryGetValue(key, out e) && (DateTime.UtcNow - e.Key).TotalSeconds < ttlSec) return (T)e.Value;
             }
             T val = load();   // النداء البطيء خارج القفل
-            lock (_ttl) { _ttl[key] = new KeyValuePair<DateTime, object>(DateTime.Now, val); }
+            lock (_ttl) { _ttl[key] = new KeyValuePair<DateTime, object>(DateTime.UtcNow, val); }
             return val;
         }
 
@@ -1636,12 +1636,12 @@ namespace CenterPoint
             {
                 try
                 {
-                    string stamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
+                    string stamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm");
                     string model = Devices.Prop(d, "ro.product.model"); if (model == "") model = "device";
                     model = Regex.Replace(model, @"[^\w]", "_");
                     string root = Path.Combine(bkFolder, "CenterPoint_Backup_" + model + "_" + stamp);
                     Directory.CreateDirectory(root);
-                    var t0 = DateTime.Now;
+                    var t0 = DateTime.UtcNow;
                     BkLog(""); BkLog("بدء النسخ الاحتياطي لـ " + d.Model + "  (" + t0.ToString("HH:mm:ss") + ")");
                     BkLog("المجلد: " + root);
                     int i = 0, okFiles = 0, warns = 0;
@@ -1686,7 +1686,7 @@ namespace CenterPoint
                         else BkLog("  لا أسماء");
                     }
                     BkProg(100);
-                    var dur = (DateTime.Now - t0);
+                    var dur = (DateTime.UtcNow - t0);
                     BkLog("");
                     BkLog("✅ انتهى النسخ الاحتياطي — " + okFiles + " ملف، المدة " + (int)dur.TotalSeconds + " ثانية." + (warns > 0 ? "  (تنبيهات: " + warns + ")" : ""));
                     LogOp("تم إنشاء نسخة احتياطية — " + okFiles + " ملف");
@@ -1795,7 +1795,7 @@ namespace CenterPoint
             {
                 try
                 {
-                    string stamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
+                    string stamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm");
                     string root = Path.Combine(bkFolder, "CenterPoint_iPhoneBackup_" + stamp);
                     Directory.CreateDirectory(root);
                     BkLog(""); BkLog("بدء النسخ الاحتياطي للآيفون " + d.Id);
@@ -2376,7 +2376,7 @@ namespace CenterPoint
         // بثّ تقدّم النقل لواجهة الويب (نسبة/سرعة/عدد/وقت متبقٍّ)
         void PostXfer(string status)
         {
-            double secs = (DateTime.Now - xStart).TotalSeconds;
+            double secs = (DateTime.UtcNow - xStart).TotalSeconds;
             double mbps = secs > 0 ? (xBytes / 1048576.0 / secs) : 0;
             int remaining = xTotal - xDone; if (remaining < 0) remaining = 0;
             double fps = secs > 0 ? xDone / secs : 0;
@@ -2454,7 +2454,7 @@ namespace CenterPoint
             try
             {
                 string exports = ExportsDir;
-                File.AppendAllText(Path.Combine(exports, "operations.log"), msg + "|" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(Path.Combine(exports, "operations.log"), msg + "|" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + Environment.NewLine, Encoding.UTF8);
             }
             catch { }
             RefreshOps();
@@ -2466,7 +2466,7 @@ namespace CenterPoint
             try
             {
                 string exports = ExportsDir;
-                string line = DateTime.Now.ToString("yyyy-MM-dd HH:mm") + " | " + where + " | " + (msg ?? "").Replace("\r", " ").Replace("\n", " ");
+                string line = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " | " + where + " | " + (msg ?? "").Replace("\r", " ").Replace("\n", " ");
                 File.AppendAllText(Path.Combine(exports, "errors.log"), line + Environment.NewLine, Encoding.UTF8);
             }
             catch { }
@@ -2535,7 +2535,7 @@ namespace CenterPoint
             if (content.Length < 40) { MessageBox.Show("نفّذ الفحص أولاً قبل الحفظ.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             try
             {
-                string path = Path.Combine(ExportsDir, "CenterPoint_RepairReport_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt");
+                string path = Path.Combine(ExportsDir, "CenterPoint_RepairReport_" + DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt");
                 File.WriteAllText(path, content, new UTF8Encoding(true));
                 LogOp("تم حفظ تقرير الإصلاح");
                 MessageBox.Show("تم حفظ تقرير الإصلاح في:\r\n" + path, "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -2554,7 +2554,7 @@ namespace CenterPoint
                 var warns = new List<string>();
                 var recs = new List<string>();
                 sb.AppendLine("══════════ تقرير الإصلاح — CENTER POINT ══════════");
-                sb.AppendLine("التاريخ: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                sb.AppendLine("التاريخ: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
                 sb.AppendLine("وضع العمل: فحص وتشخيص فقط — بدون أي تعديل على الجهاز.");
                 sb.AppendLine("");
 
@@ -2587,7 +2587,7 @@ namespace CenterPoint
                 if (!string.IsNullOrWhiteSpace(patch))
                 {
                     DateTime pd;
-                    if (DateTime.TryParse(patch, out pd) && (DateTime.Now - pd).TotalDays > 400)
+                    if (DateTime.TryParse(patch, out pd) && (DateTime.UtcNow - pd).TotalDays > 400)
                     { warns.Add("ترقيع الأمان قديم (" + patch + ")."); recs.Add("انصح الزبون بتحديث النظام إن توفّر."); }
                 }
                 sb.AppendLine("");
@@ -3908,11 +3908,11 @@ namespace CenterPoint
             {
                 dlg.Title = "حفظ تقرير تشخيص Center Point";
                 dlg.Filter = "Text Report (*.txt)|*.txt";
-                dlg.FileName = "CenterPoint_Diagnostic_" + DateTime.Now.ToString("yyyyMMdd_HHmm") + ".txt";
+                dlg.FileName = "CenterPoint_Diagnostic_" + DateTime.UtcNow.ToString("yyyyMMdd_HHmm") + ".txt";
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
                 try
                 {
-                    File.WriteAllText(dlg.FileName, "CENTER POINT TRANSFER V12.1.0 PRO\r\n" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n\r\n" + content, new UTF8Encoding(true));
+                    File.WriteAllText(dlg.FileName, "CENTER POINT TRANSFER V12.1.0 PRO\r\n" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n\r\n" + content, new UTF8Encoding(true));
                     LogOp("تم حفظ تقرير تشخيص USB");
                     MessageBox.Show("تم حفظ التقرير بنجاح.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -4306,7 +4306,7 @@ namespace CenterPoint
             Task.Run(() =>
             {
                 var ad = Shell.Run("adb", "devices", 12000);
-                string stamp = DateTime.Now.ToString("HH:mm:ss");
+                string stamp = DateTime.UtcNow.ToString("HH:mm:ss");
                 int n = 0; var cur = new StringBuilder();
                 if (ad.ok)
                     foreach (var ln in ad.outp.Replace("\r", "").Split('\n'))
@@ -4319,7 +4319,7 @@ namespace CenterPoint
                 string state = n + " جهاز" + (cur.Length > 0 ? "  |  " + cur.ToString().Trim() : "  |  لا أجهزة متصلة");
                 if (monLast != "" && monLast != state) LogError("مراقبة", "تغيّر حالة الأجهزة: [" + monLast + "] ← [" + state + "]");
                 monLast = state;
-                string dot = (DateTime.Now.Second % 2 == 0) ? "🔴" : "⚪";
+                string dot = (DateTime.UtcNow.Second % 2 == 0) ? "🔴" : "⚪";
                 SetText(monStatus, dot + " فحص مستمر — " + stamp + "   |   " + state + (opBusy ? "   |   ⚙ عملية جارية: " + opName : ""));
             });
         }
@@ -4334,7 +4334,7 @@ namespace CenterPoint
                 sb.AppendLine("========================================");
                 sb.AppendLine("     فحص شامل - CENTER POINT TRANSFER");
                 sb.AppendLine("========================================");
-                sb.AppendLine("التاريخ: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                sb.AppendLine("التاريخ: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
                 sb.AppendLine("");
 
                 // 1) الأدوات
@@ -4373,10 +4373,10 @@ namespace CenterPoint
                     string id = ready[0];
                     try
                     {
-                        string localTest = Path.Combine(Path.GetTempPath(), "cp_selftest_" + DateTime.Now.Ticks + ".txt");
+                        string localTest = Path.Combine(Path.GetTempPath(), "cp_selftest_" + DateTime.UtcNow.Ticks + ".txt");
                         File.WriteAllText(localTest, "CenterPoint self-test " + Guid.NewGuid().ToString("N"), new UTF8Encoding(false));
                         long lsz = new FileInfo(localTest).Length;
-                        string remote = "/sdcard/.cp_selftest_" + DateTime.Now.Ticks + ".txt";
+                        string remote = "/sdcard/.cp_selftest_" + DateTime.UtcNow.Ticks + ".txt";
                         var push = Shell.Run("adb", "-s " + id + " push " + Shell.Q(localTest) + " " + remote, 60000);
                         var stt = Shell.Run("adb", "-s " + id + " shell stat -c %s " + Shell.Q(remote), 30000);
                         long rsz = 0; long.TryParse((stt.outp ?? "").Trim(), out rsz);
@@ -4417,7 +4417,7 @@ namespace CenterPoint
                 try
                 {
                     string exports = ExportsDir;
-                    path = Path.Combine(exports, "CenterPoint_SelfTest_" + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt");
+                    path = Path.Combine(exports, "CenterPoint_SelfTest_" + DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt");
                     File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
                 }
                 catch { }
@@ -4894,7 +4894,7 @@ namespace CenterPoint
                 string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CenterPoint Transfer", "exports");
                 Directory.CreateDirectory(dir);
                 string msg = ex == null ? "خطأ غير معروف" : (ex.Message + " | " + ex.StackTrace);
-                string line = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " | [خطأ شامل/" + where + "] | " + msg.Replace("\r", " ").Replace("\n", " ");
+                string line = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + " | [خطأ شامل/" + where + "] | " + msg.Replace("\r", " ").Replace("\n", " ");
                 File.AppendAllText(Path.Combine(dir, "errors.log"), line + Environment.NewLine, Encoding.UTF8);
             }
             catch { }

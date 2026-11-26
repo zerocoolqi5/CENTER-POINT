@@ -335,7 +335,7 @@ namespace CenterPoint
                 Size = sz,
                 Md5 = "",
                 Note = FwFileType(fwMgrFile),
-                Added = DateTime.Now.ToString("yyyy-MM-dd HH:mm")
+                Added = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm")
             };
             fwLib.Insert(0, e); FwLibSave(); FwLibRefresh();
             MessageBox.Show("أُضيف للمكتبة ✔", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -378,7 +378,7 @@ namespace CenterPoint
             string model = fwLibModel.Text.Trim();
             if (model == "" && fwLibPath == "") { MessageBox.Show("اكتب الموديل أو اختر ملفاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             long sz = 0; try { if (fwLibPath != "") sz = new FileInfo(fwLibPath).Length; } catch { }
-            fwLib.Insert(0, new FwEntry { Model = model, Android = fwLibAndroid.Text.Trim(), Chipset = fwLibChip.Text.Trim(), Path = fwLibPath, Size = sz, Md5 = "", Note = fwLibNote.Text.Trim(), Added = DateTime.Now.ToString("yyyy-MM-dd HH:mm") });
+            fwLib.Insert(0, new FwEntry { Model = model, Android = fwLibAndroid.Text.Trim(), Chipset = fwLibChip.Text.Trim(), Path = fwLibPath, Size = sz, Md5 = "", Note = fwLibNote.Text.Trim(), Added = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") });
             FwLibSave(); FwLibRefresh();
             fwLibModel.Text = ""; fwLibAndroid.Text = ""; fwLibChip.Text = ""; fwLibNote.Text = ""; fwLibPath = "";
             LogOp("فيرموير بالمكتبة: " + model);
@@ -704,7 +704,7 @@ namespace CenterPoint
             string model = fwLogModelB.Text.Trim();
             if (model == "") { MessageBox.Show("اكتب الموديل.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             string serial = fwLogSerialB != null ? fwLogSerialB.Text.Trim() : "";
-            flashLog.Insert(0, new FlashOp { Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm"), Model = model, Serial = serial, Tool = fwLogToolC.Text, Firmware = fwLogFwB.Text.Trim(), Result = fwLogResultC.Text, Note = fwLogNoteB.Text.Trim() });
+            flashLog.Insert(0, new FlashOp { Date = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm"), Model = model, Serial = serial, Tool = fwLogToolC.Text, Firmware = fwLogFwB.Text.Trim(), Result = fwLogResultC.Text, Note = fwLogNoteB.Text.Trim() });
             FlashLogSave(); FlashLogRefresh();
             fwLogModelB.Text = ""; fwLogFwB.Text = ""; fwLogNoteB.Text = ""; if (fwLogSerialB != null) fwLogSerialB.Text = "";
             LogOp("سجل تفليش: " + model + (serial != "" ? " [" + serial + "]" : "") + " = " + fwLogResultC.Text);
@@ -779,12 +779,12 @@ namespace CenterPoint
                 sb.Append("<style>body{font-family:Arial;background:#fff;color:#111;padding:24px}h1{color:#1a66cc;margin:0}");
                 sb.Append(".muted{color:#666;font-size:13px}table{width:100%;border-collapse:collapse;margin-top:14px}");
                 sb.Append("th,td{border:1px solid #ccc;padding:7px;text-align:right;font-size:13px}th{background:#eef3fb}</style></head><body>");
-                sb.Append("<h1>سنتر بوينت للاتصالات</h1><div class='muted'>سجل عمليات التفليش — " + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + (flt != "" ? " — فلترة: " + HtmlEsc(flt) : "") + "</div>");
+                sb.Append("<h1>سنتر بوينت للاتصالات</h1><div class='muted'>سجل عمليات التفليش — " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + (flt != "" ? " — فلترة: " + HtmlEsc(flt) : "") + "</div>");
                 sb.Append("<table><tr><th>التاريخ</th><th>الموديل</th><th>آيمي/سيريال</th><th>الأداة</th><th>الفيرموير</th><th>النتيجة</th><th>ملاحظة</th></tr>");
                 foreach (var x in rows)
                     sb.Append("<tr><td>" + HtmlEsc(x.Date) + "</td><td>" + HtmlEsc(x.Model) + "</td><td>" + HtmlEsc(x.Serial) + "</td><td>" + HtmlEsc(x.Tool) + "</td><td>" + HtmlEsc(x.Firmware) + "</td><td>" + HtmlEsc(x.Result) + "</td><td>" + HtmlEsc(x.Note) + "</td></tr>");
                 sb.Append("</table><p class='muted' style='margin-top:18px'>عدد العمليات: " + rows.Count + "</p></body></html>");
-                string path = System.IO.Path.Combine(ExportsDir, "flash_log_" + DateTime.Now.ToString("yyMMddHHmmss") + ".html");
+                string path = System.IO.Path.Combine(ExportsDir, "flash_log_" + DateTime.UtcNow.ToString("yyMMddHHmmss") + ".html");
                 File.WriteAllText(path, sb.ToString(), new UTF8Encoding(true));
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = path, UseShellExecute = true });
                 LogOp("تصدير سجل تفليش (" + rows.Count + ")");

@@ -93,7 +93,7 @@ namespace CenterPoint
             {
                 var sb = new StringBuilder();
                 sb.AppendLine("════════ كشف موحّد لكل الأجهزة ════════");
-                sb.AppendLine("الوقت: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                sb.AppendLine("الوقت: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
                 sb.AppendLine("");
 
                 int totalTargets = 0;

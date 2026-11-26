@@ -137,7 +137,7 @@ namespace CenterPoint
         {
             string cust = (tkCustomer.Text ?? "").Trim();
             if (cust == "") { MessageBox.Show("اكتب اسم الزبون على الأقل.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+            string now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm");
             if (tkEditId != "")
             {
                 var t = ticketList.FirstOrDefault(x => x.Id == tkEditId);
@@ -151,7 +151,7 @@ namespace CenterPoint
             {
                 var t = new Ticket
                 {
-                    Id = DateTime.Now.ToString("yyMMddHHmmss"),
+                    Id = DateTime.UtcNow.ToString("yyMMddHHmmss"),
                     Customer = cust, Phone = tkPhone.Text.Trim(), Device = tkDevice.Text.Trim(),
                     Issue = tkIssue.Text.Trim(), Status = tkStatus.Text, Created = now, Updated = now
                 };
