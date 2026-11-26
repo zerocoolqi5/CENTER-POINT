@@ -67,7 +67,7 @@ namespace CenterPoint
             var clrBtn = new Button { Text = "🧹 مسح الحقول", Location = new Point(326, 180), Size = new Size(140, 32), BackColor = CARD, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Arial", 9, FontStyle.Bold) };
             clrBtn.FlatAppearance.BorderColor = BLUE; clrBtn.Click += (s, e) => TkClear();
             var refBtn = new Button { Text = "🔄 تحديث", Location = new Point(474, 180), Size = new Size(120, 32), BackColor = BLUE, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Arial", 9, FontStyle.Bold) };
-            refBtn.FlatAppearance.BorderSize = 0; refBtn.Click += (s, e) => { TicketsLoad(); };
+            refBtn.FlatAppearance.BorderSize = 0; refBtn.Click += (s, e) => TicketsLoad();
             pageTickets.Controls.Add(saveBtn); pageTickets.Controls.Add(delBtn); pageTickets.Controls.Add(clrBtn); pageTickets.Controls.Add(refBtn);
 
             // صف الربط: زبون موجود / إنشاء فاتورة
