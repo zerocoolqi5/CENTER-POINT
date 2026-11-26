@@ -67,9 +67,9 @@ namespace CenterPoint
         TextBox fwLogModelB, fwLogFwB, fwLogNoteB, fwLogSerialB, fwLogFilterB; ComboBox fwLogToolC, fwLogResultC; ListBox fwLogList;
         List<FlashOp> flashLog = new List<FlashOp>();
 
-        string FwLibJson { get { return System.IO.Path.Combine(DataDir, "firmware_lib.json"); } }
-        string FwToolsJson { get { return System.IO.Path.Combine(DataDir, "vendor_tools.json"); } }
-        string FlashLogJson { get { return System.IO.Path.Combine(DataDir, "flash_log.json"); } }
+        string FwLibJson { get => System.IO.Path.Combine(DataDir, "firmware_lib.json"); }
+        string FwToolsJson { get => System.IO.Path.Combine(DataDir, "vendor_tools.json"); }
+        string FlashLogJson { get => System.IO.Path.Combine(DataDir, "flash_log.json"); }
 
         void BuildFwPage()
         {

@@ -31,7 +31,7 @@ namespace CenterPoint
         bool _settingsLoaded = false, _autoUpdate = true;
         string _dataDir = "";
         // app_settings.json محلي دائماً (يحمل إعداد مجلد البيانات نفسه) — لا يُنقل للمجلد المشترك
-        string AutoUpdatePath { get { return System.IO.Path.Combine(LocalExportsDir, "app_settings.json"); } }
+        string AutoUpdatePath { get => System.IO.Path.Combine(LocalExportsDir, "app_settings.json"); }
 
         bool AutoUpdateEnabled
         {

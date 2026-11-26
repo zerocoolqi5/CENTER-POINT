@@ -90,7 +90,7 @@ namespace CenterPoint
     class BarPanel : Panel
     {
         int _v = 0;
-        public int Value { get { return _v; } set { _v = Math.Max(0, Math.Min(100, value)); Invalidate(); } }
+        public int Value { get => _v; set { _v = Math.Max(0, Math.Min(100, value)); Invalidate(); } }
         public Color FillColor = Color.FromArgb(46, 160, 67);
         public Color Track = Color.FromArgb(38, 50, 78);
         public BarPanel()
@@ -606,11 +606,11 @@ namespace CenterPoint
             new Category("واتساب (WhatsApp)", "/sdcard/Android/media/com.whatsapp/WhatsApp", null),
         };
 
-        string AppDir { get { return AppDomain.CurrentDomain.BaseDirectory; } }
+        string AppDir { get => AppDomain.CurrentDomain.BaseDirectory; }
         // مجلد بيانات دائم خارج مجلد البرنامج (لا يُحذف عند إزالة البرنامج)
         // مجلد محلي دائماً (السجلات، التقارير، app_settings)
         string LocalExportsDir { get { var p = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "CenterPoint Transfer", "exports"); try { Directory.CreateDirectory(p); } catch { } return p; } }
-        string ExportsDir { get { return LocalExportsDir; } }
+        string ExportsDir { get => LocalExportsDir; }
         // مجلد البيانات: المشترك (OneDrive/شبكة) إن ضُبط وصالح، وإلا المحلي — تتزامن بيانات المحل بين الأجهزة
         string DataDir
         {
