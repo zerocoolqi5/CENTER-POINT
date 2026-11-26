@@ -82,7 +82,7 @@ namespace CenterPoint
             dynamic cur = MtpStorageRoot(deviceFolder);
             if (cur == null) return null;
             string rel = (androidPath ?? "").Replace("/sdcard/", "").Replace("/sdcard", "").Trim('/');
-            if (rel == "") return cur;
+            if (string.IsNullOrWhiteSpace(rel)) return cur;
             foreach (var seg in rel.Split('/'))
             {
                 if (string.IsNullOrEmpty(seg)) continue;
@@ -195,7 +195,7 @@ namespace CenterPoint
                             string rel = f.Substring(localRoot.Length).TrimStart('\\', '/').Replace('\\', '/');
                             int slash = rel.LastIndexOf('/');
                             string relDir = slash > 0 ? rel.Substring(0, slash) : "";
-                            string destPath = relDir == "" ? androidPath : androidPath + "/" + relDir;
+                            string destPath = string.IsNullOrWhiteSpace(relDir) ? androidPath : androidPath + "/" + relDir;
                             dynamic destFolder;
                             if (folderCache.ContainsKey(destPath)) destFolder = folderCache[destPath];
                             else { destFolder = MtpNavigate(deviceFolder, destPath, true); folderCache[destPath] = (object)destFolder; }
@@ -420,7 +420,7 @@ namespace CenterPoint
                     string el = Path.Combine(exports, "errors.log");
                     if (File.Exists(el))
                     {
-                        var lines = File.ReadAllLines(el).Where(x => x.Trim() != "").ToList();
+                        var lines = File.ReadAllLines(el).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
                         if (lines.Count > 0)
                         {
                             sb.AppendLine("----------------------------------------");

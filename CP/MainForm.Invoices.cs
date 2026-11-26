@@ -140,7 +140,7 @@ namespace CenterPoint
         void IvAddItem()
         {
             string desc = (ivItemDesc.Text ?? "").Trim();
-            if (desc == "") { MessageBox.Show("اكتب وصف البند.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(desc)) { MessageBox.Show("اكتب وصف البند.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             ivCurrentItems.Add(new InvItem { Desc = desc, Qty = Math.Max(1, ParseI(ivItemQty.Text)), Price = ParseD(ivItemPrice.Text) });
             ivItemDesc.Text = ""; ivItemQty.Text = "1"; ivItemPrice.Text = "0";
             IvRefreshItems();
@@ -187,7 +187,7 @@ namespace CenterPoint
         void IvSave()
         {
             string cust = (ivCustomer.Text ?? "").Trim();
-            if (cust == "") { MessageBox.Show("اكتب اسم الزبون.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            if (string.IsNullOrWhiteSpace(cust)) { MessageBox.Show("اكتب اسم الزبون.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             if (ivCurrentItems.Count == 0) { MessageBox.Show("أضف بنداً واحداً على الأقل.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
             double total = IvItemsSum() + ParseD(ivLabor.Text);
             string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");

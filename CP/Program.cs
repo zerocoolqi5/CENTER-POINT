@@ -208,7 +208,7 @@ namespace CenterPoint
                 try { cands.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "adb.exe")); } catch { }
                 try { cands.Add(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "platform-tools", "adb.exe")); } catch { }
                 string path = Environment.GetEnvironmentVariable("PATH") ?? "";
-                foreach (var dir in path.Split(';')) { var t = dir.Trim(); if (t != "") { try { cands.Add(Path.Combine(t, "adb.exe")); } catch { } } }
+                foreach (var dir in path.Split(';')) { var t = dir.Trim(); if (!string.IsNullOrWhiteSpace(t)) { try { cands.Add(Path.Combine(t, "adb.exe")); } catch { } } }
                 foreach (var c in cands) { try { if (File.Exists(c)) { _adbExe = c; return _adbExe; } } catch { } }
             }
             catch { }
@@ -316,7 +316,7 @@ namespace CenterPoint
         {
             var r = Shell.Run("adb", "-s " + d.Id + " shell find " + path + " -type f", 300000);
             if (!r.ok) return -1;
-            return r.outp.Replace("\r", "").Split('\n').Count(l => l.Trim() != "");
+            return r.outp.Replace("\r", "").Split('\n').Count(l => !string.IsNullOrWhiteSpace(l));
         }
 
         public static List<Device> ListIos()
@@ -1008,7 +1008,7 @@ namespace CenterPoint
                         {
                             if (d.Kind == "android")
                             {
-                                string model = Devices.Prop(d, "ro.product.model"); if (model == "") model = d.Model;
+                                string model = Devices.Prop(d, "ro.product.model"); if (string.IsNullOrWhiteSpace(model)) model = d.Model;
                                 int tot = 0, free = 0, pct = 0;
                                 try { var st = Devices.Storage(d); tot = (int)Math.Round(st.tot); free = (int)Math.Round(st.free); pct = st.pct; } catch { }
                                 list.Add(new { kind = "android", model = model, storeTotal = tot, storeFree = free, storePct = pct });
@@ -1158,19 +1158,19 @@ namespace CenterPoint
                     string ver = Devices.Prop(d, "ro.build.version.release");
                     string sdk = Devices.Prop(d, "ro.build.version.sdk");
                     string cpu = Devices.Prop(d, "ro.soc.model");
-                    if (cpu == "") cpu = Devices.Prop(d, "ro.board.platform");
+                    if (string.IsNullOrWhiteSpace(cpu)) cpu = Devices.Prop(d, "ro.board.platform");
                     string ram = Devices.Ram(d);
                     int bat = Devices.Battery(d);
                     var st = Devices.Storage(d);
-                    SetText(lblPhoneName, model == "" ? d.Model : model);
-                    SetText(lbModel, model == "" ? d.Model : model);
-                    SetText(lbMan, man == "" ? "—" : man);
-                    SetText(lbAndroid, ver == "" ? "—" : ("أندرويد " + ver + (sdk != "" ? "  (API " + sdk + ")" : "")));
-                    SetText(lbCpu, cpu == "" ? "—" : cpu);
-                    SetText(lbRam, ram == "" ? "—" : ram);
+                    SetText(lblPhoneName, string.IsNullOrWhiteSpace(model) ? d.Model : model);
+                    SetText(lbModel, string.IsNullOrWhiteSpace(model) ? d.Model : model);
+                    SetText(lbMan, string.IsNullOrWhiteSpace(man) ? "—" : man);
+                    SetText(lbAndroid, string.IsNullOrWhiteSpace(ver) ? "—" : ("أندرويد " + ver + (sdk != "" ? "  (API " + sdk + ")" : "")));
+                    SetText(lbCpu, string.IsNullOrWhiteSpace(cpu) ? "—" : cpu);
+                    SetText(lbRam, string.IsNullOrWhiteSpace(ram) ? "—" : ram);
                     SetText(lbBat, bat >= 0 ? (bat + "%") : "—");
                     string sec = Devices.Prop(d, "ro.build.version.security_patch");
-                    SetText(lbSecurity, sec == "" ? "—" : sec);
+                    SetText(lbSecurity, string.IsNullOrWhiteSpace(sec) ? "—" : sec);
                     var wsz = Shell.Run("adb", "-s " + d.Id + " shell wm size", 15000);
                     var mres = Regex.Match(wsz.outp, @"(\d{3,5})x(\d{3,5})");
                     SetText(lbResolution, mres.Success ? (mres.Groups[1].Value + " × " + mres.Groups[2].Value) : "—");
@@ -1627,7 +1627,7 @@ namespace CenterPoint
         void StartBackup()
         {
             if (bkDev.SelectedIndex < 0 || bkDev.SelectedIndex >= devices.Count) { MessageBox.Show("اختر الجهاز."); return; }
-            if (bkFolder == "" || !Directory.Exists(bkFolder)) { MessageBox.Show("اختر مجلد النسخ أول."); return; }
+            if (string.IsNullOrWhiteSpace(bkFolder) || !Directory.Exists(bkFolder)) { MessageBox.Show("اختر مجلد النسخ أول."); return; }
             var d = devices[bkDev.SelectedIndex];
             if (d.Kind == "ios") { IosBackup(d); return; }
             if (!BeginOp("النسخ الاحتياطي/الاستعادة")) return;
@@ -1637,7 +1637,7 @@ namespace CenterPoint
                 try
                 {
                     string stamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
-                    string model = Devices.Prop(d, "ro.product.model"); if (model == "") model = "device";
+                    string model = Devices.Prop(d, "ro.product.model"); if (string.IsNullOrWhiteSpace(model)) model = "device";
                     model = Regex.Replace(model, @"[^\w]", "_");
                     string root = Path.Combine(bkFolder, "CenterPoint_Backup_" + model + "_" + stamp);
                     Directory.CreateDirectory(root);
@@ -1959,7 +1959,7 @@ namespace CenterPoint
         string Disp(string pkg)
         {
             string f = AppFriendly(pkg);
-            return f == "" ? pkg : (f + "   ·   " + pkg);
+            return string.IsNullOrWhiteSpace(f) ? pkg : (f + "   ·   " + pkg);
         }
 
         void FilterApps()
@@ -2409,7 +2409,7 @@ namespace CenterPoint
                 {
                     if (d.Kind == "android")
                     {
-                        string model = Devices.Prop(d, "ro.product.model"); if (model == "") model = d.Model;
+                        string model = Devices.Prop(d, "ro.product.model"); if (string.IsNullOrWhiteSpace(model)) model = d.Model;
                         string ver = Devices.Prop(d, "ro.build.version.release");
                         int bat = Devices.Battery(d);
                         var st = Devices.Storage(d);
@@ -2610,7 +2610,7 @@ namespace CenterPoint
                 sb.AppendLine("   الشحن: " + (blevel == "" ? "?" : blevel + "%"));
                 string hTxt = bhealth == "2" ? "جيدة" : bhealth == "3" ? "زائدة الحرارة" : bhealth == "4" ? "تالفة" : bhealth == "5" ? "فولتية زائدة" : bhealth == "7" ? "باردة" : "غير معروفة";
                 sb.AppendLine("   الصحة: " + hTxt);
-                if (btemp != "" && int.TryParse(btemp, out int tval)) sb.AppendLine("   الحرارة: " + (tval / 10.0).ToString("0.0") + "°C");
+                if (!string.IsNullOrWhiteSpace(btemp) && int.TryParse(btemp, out int tval)) sb.AppendLine("   الحرارة: " + (tval / 10.0).ToString("0.0") + "°C");
                 if (bhealth == "3" || bhealth == "4" || bhealth == "5") { warns.Add("حالة البطارية: " + hTxt + "."); recs.Add("افحص البطارية قبل أي عملية طويلة."); }
                 sb.AppendLine("");
 
@@ -2635,7 +2635,7 @@ namespace CenterPoint
                 try
                 {
                     string el = Path.Combine(ExportsDir, "errors.log");
-                    int ec = File.Exists(el) ? File.ReadAllLines(el).Count(x => x.Trim() != "") : 0;
+                    int ec = File.Exists(el) ? File.ReadAllLines(el).Count(x => !string.IsNullOrWhiteSpace(x)) : 0;
                     sb.AppendLine("● سجل أخطاء البرنامج: " + ec + " إدخال.");
                     sb.AppendLine("");
                 }
@@ -2866,9 +2866,9 @@ namespace CenterPoint
                 {
                     var r = Shell.Run("adb", "-s " + d.Id + " shell service call iphonesubinfo 1", 15000);
                     imei = ParseImei(r.outp);
-                    if (imei == "") { var r2 = Shell.Run("adb", "-s " + d.Id + " shell dumpsys iphonesubinfo", 15000); imei = Rx(r2.outp ?? "", @"Device ID\s*=\s*(\d{14,16})"); }
+                    if (string.IsNullOrWhiteSpace(imei)) { var r2 = Shell.Run("adb", "-s " + d.Id + " shell dumpsys iphonesubinfo", 15000); imei = Rx(r2.outp ?? "", @"Device ID\s*=\s*(\d{14,16})"); }
                 }
-                sb.AppendLine("IMEI: " + (imei == "" ? "غير متاح عبر ADB — اطلبه بطلب *#06# على الجهاز" : imei));
+                sb.AppendLine("IMEI: " + (string.IsNullOrWhiteSpace(imei) ? "غير متاح عبر ADB — اطلبه بطلب *#06# على الجهاز" : imei));
                 sb.AppendLine("");
                 sb.AppendLine("الطريقة الرسمية لفك الشبكة:");
                 sb.AppendLine("1) احصل على IMEI (من فوق أو بطلب *#06#).");
@@ -3041,12 +3041,12 @@ namespace CenterPoint
         void RepSearchFirmware()
         {
             string model = (repMgrModel == null ? "" : repMgrModel.Text).Trim();
-            if (model == "")
+            if (string.IsNullOrWhiteSpace(model))
             {
                 var d = devices.FirstOrDefault(x => x.Kind == "android");
                 if (d != null) { model = Devices.Prop(d, "ro.product.model"); if (repMgrModel != null) repMgrModel.Text = model; }
             }
-            if (model == "")
+            if (string.IsNullOrWhiteSpace(model))
             {
                 MessageBox.Show("اكتب موديل الجهاز أولاً (مثل M10_C07)، أو وصّل الجهاز بـADB ليُقرأ تلقائياً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
@@ -3085,12 +3085,12 @@ namespace CenterPoint
         void FlSearchRom()
         {
             string model = (flModel == null ? "" : flModel.Text).Trim();
-            if (model == "")
+            if (string.IsNullOrWhiteSpace(model))
             {
                 var d = devices.FirstOrDefault(x => x.Kind == "android");
                 if (d != null) { model = Devices.Prop(d, "ro.product.model"); if (flModel != null) flModel.Text = model; }
             }
-            if (model == "")
+            if (string.IsNullOrWhiteSpace(model))
             {
                 MessageBox.Show("اكتب موديل الجهاز أولاً (مثل M10_C07)، أو وصّل الجهاز بـADB ليُقرأ تلقائياً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
@@ -3119,12 +3119,12 @@ namespace CenterPoint
         void SoftSearchFirmware()
         {
             string model = (softModel == null ? "" : softModel.Text).Trim();
-            if (model == "")
+            if (string.IsNullOrWhiteSpace(model))
             {
                 var d = devices.FirstOrDefault(x => x.Kind == "android");
                 if (d != null) { model = Devices.Prop(d, "ro.product.model"); if (softModel != null) softModel.Text = model; }
             }
-            if (model == "")
+            if (string.IsNullOrWhiteSpace(model))
             {
                 MessageBox.Show("اكتب موديل الجهاز أولاً (مثل M10_C07)، أو وصّل الجهاز بـADB ليُقرأ تلقائياً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
@@ -3220,9 +3220,9 @@ namespace CenterPoint
 
         void RepFlFastboot()
         {
-            if (repFlPath == "" || !File.Exists(repFlPath)) { MessageBox.Show("اختر ملف .img أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            if (string.IsNullOrWhiteSpace(repFlPath) || !File.Exists(repFlPath)) { MessageBox.Show("اختر ملف .img أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
             string part = (repFlPartition == null ? "" : repFlPartition.Text).Trim();
-            if (part == "") { MessageBox.Show("حدّد اسم القسم (مثل boot أو recovery).", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            if (string.IsNullOrWhiteSpace(part)) { MessageBox.Show("حدّد اسم القسم (مثل boot أو recovery).", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
             string fbSerial = GetSingleFastbootTarget();   // حاجز الجهاز الواحد
             if (fbSerial == null) return;
             string msg = "⛔ تحذير: أنت على وشك تفليش القسم «" + part + "» على الجهاز [" + fbSerial + "] بالملف:\r\n" + Path.GetFileName(repFlPath) +
@@ -3240,7 +3240,7 @@ namespace CenterPoint
 
         void RepFlSideload()
         {
-            if (repFlPath == "" || !File.Exists(repFlPath)) { MessageBox.Show("اختر ملف .zip أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            if (string.IsNullOrWhiteSpace(repFlPath) || !File.Exists(repFlPath)) { MessageBox.Show("اختر ملف .zip أولاً.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
             string slSerial = GetSingleSideloadTarget();   // حاجز الجهاز الواحد
             if (slSerial == null) return;
             string msg = "ستطبّق حزمة التحديث عبر adb sideload على الجهاز [" + slSerial + "]:\r\n" + Path.GetFileName(repFlPath) +
@@ -3753,11 +3753,11 @@ namespace CenterPoint
                 // المعالج
                 string cores = Trim(Shell.Run("adb", "-s " + d.Id + " shell nproc", 10000).outp);
                 sb.AppendLine("● المعالج:");
-                sb.AppendLine("   " + Devices.Prop(d, "ro.hardware") + " " + Devices.Prop(d, "ro.board.platform") + "   |   الأنوية: " + (cores == "" ? "?" : cores));
+                sb.AppendLine("   " + Devices.Prop(d, "ro.hardware") + " " + Devices.Prop(d, "ro.board.platform") + "   |   الأنوية: " + (string.IsNullOrWhiteSpace(cores) ? "?" : cores));
                 sb.AppendLine("");
                 // البطارية ووقت التشغيل
                 string lvl = Rx(Shell.Run("adb", "-s " + d.Id + " shell dumpsys battery", 15000).outp, @"level:\s*(\d+)");
-                sb.AppendLine("● البطارية: " + (lvl == "" ? "?" : lvl + "%"));
+                sb.AppendLine("● البطارية: " + (string.IsNullOrWhiteSpace(lvl) ? "?" : lvl + "%"));
                 string up = Trim(Shell.Run("adb", "-s " + d.Id + " shell uptime", 10000).outp);
                 if (up != "") sb.AppendLine("● مدة التشغيل: " + up);
                 sb.AppendLine("");
@@ -3972,7 +3972,7 @@ namespace CenterPoint
                         var p = ln.Split('|');
                         if (p.Length < 3) continue;
                         string status = p[0].Trim(), cls = p[1].Trim(), name = p[2].Trim();
-                        if (name == "") continue;
+                        if (string.IsNullOrWhiteSpace(name)) continue;
                         string nl = name.ToLower();
                         if (cls == "WPD") { anyWpd = true; if (nl.Contains("mtp")) mtp = true; if (nl.Contains("ptp")) ptp = true; }
                         if (cls == "AndroidUsbDeviceClass" || nl.Contains("adb") || nl.Contains("android composite") || nl.Contains("android bootloader")) androidDrv = true;
@@ -4056,7 +4056,7 @@ namespace CenterPoint
 
         bool FmIsProtected(string remote)
         {
-            string p = (remote ?? "").TrimEnd('/'); if (p == "") p = "/";
+            string p = (remote ?? "").TrimEnd('/'); if (string.IsNullOrWhiteSpace(p)) p = "/";
             foreach (var pr in FmProtected) if (string.Equals(p, pr, StringComparison.OrdinalIgnoreCase)) return true;
             return false;
         }
@@ -4401,7 +4401,7 @@ namespace CenterPoint
                     string el = Path.Combine(ExportsDir, "errors.log");
                     if (File.Exists(el))
                     {
-                        var lines = File.ReadAllLines(el).Where(x => x.Trim() != "").ToList();
+                        var lines = File.ReadAllLines(el).Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
                         sb.AppendLine("   إجمالي الأخطاء المسجّلة: " + lines.Count);
                         sb.AppendLine("   آخر الأخطاء:");
                         foreach (var l in lines.AsEnumerable().Reverse().Take(5)) sb.AppendLine("      • " + l);
@@ -4469,7 +4469,7 @@ namespace CenterPoint
                 var txt = File.ReadAllText(latest);
                 string Get(string key) { var m = Regex.Match(txt, Regex.Escape(key) + @"\s*(.+)"); return m.Success ? m.Groups[1].Value.Trim() : "—"; }
                 int errCount = 0;
-                try { string el = Path.Combine(ExportsDir, "errors.log"); if (File.Exists(el)) errCount = File.ReadAllLines(el).Count(x => x.Trim() != ""); } catch { }
+                try { string el = Path.Combine(ExportsDir, "errors.log"); if (File.Exists(el)) errCount = File.ReadAllLines(el).Count(x => !string.IsNullOrWhiteSpace(x)); } catch { }
                 repSummary.Text =
                     "الإجمالي: " + Get("الإجمالي:") + "    |    نجح: " + Get("نجح:") + "    |    فشل: " + Get("فشل:") + "\r\n" +
                     "الحجم: " + Get("الحجم الكلي:") + "    |    المدة: " + Get("المدة:") + "    |    متوسط السرعة: " + Get("متوسط السرعة:") +
@@ -4732,7 +4732,7 @@ namespace CenterPoint
                 dynamic prev = mtpNav.Pop();
                 mtpCurrent = prev;
                 string nm = ""; try { nm = (string)prev.Title; } catch { }
-                MtpShow(prev, nm == "" ? "…" : nm);
+                MtpShow(prev, string.IsNullOrWhiteSpace(nm) ? "…" : nm);
             });
         }
 
