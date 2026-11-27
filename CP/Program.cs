@@ -2619,7 +2619,6 @@ namespace CenterPoint
                 string crypto = Devices.Prop(d, "ro.crypto.state");
                 sb.AppendLine("   التشفير: " + (string.IsNullOrWhiteSpace(crypto) ? "غير معروف" : (crypto == "encrypted" ? "مشفّر ✔" : crypto)));
                 string locked = Devices.Prop(d, "ro.boot.flash.locked");
-                string verity = Devices.Prop(d, "ro.boot.veritymode");
                 sb.AppendLine("   قفل البوت لودر: " + (locked == "1" ? "مقفل (آمن) ✔" : locked == "0" ? "مفتوح ⚠" : "غير معروف"));
                 string su = Shell.Run("adb", "-s " + d.Id + " shell which su", 15000).outp;
                 bool rooted = !string.IsNullOrWhiteSpace(su) && su.Contains("/su");
