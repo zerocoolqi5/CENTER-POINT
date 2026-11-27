@@ -451,7 +451,7 @@ namespace CenterPoint
             public double Secs { get; set; }
         }
 
-        string TransferHistJson { get { return Path.Combine(ExportsDir, "transfer_history.json"); } }
+        string TransferHistJson { get => Path.Combine(ExportsDir, "transfer_history.json"); }
 
         // سجل نقل تراكمي — إضافة فقط، لا يؤثر على محرك النقل
         void AppendTransferHistory(Device s, Device d, int total, int ok, int fail, long bytes, double secs)

@@ -23,7 +23,7 @@ namespace CenterPoint
         public string Sdk = "";
         public string Build = "";
         public string State = "none";     // system/recovery/sideload/fastboot/none
-        public bool Present { get { return State != "none"; } }
+        public bool Present { get => State != "none"; }
 
         public string StateArabic()
         {

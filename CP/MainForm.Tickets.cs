@@ -32,7 +32,7 @@ namespace CenterPoint
         TextBox tkCustomer, tkPhone, tkDevice, tkIssue; ComboBox tkStatus; ListBox tkList;
         List<Ticket> ticketList = new List<Ticket>(); string tkEditId = "";
 
-        string TicketsPath { get { return Path.Combine(DataDir, "tickets.json"); } }
+        string TicketsPath { get => Path.Combine(DataDir, "tickets.json"); }
 
         void BuildTicketsPage()
         {
