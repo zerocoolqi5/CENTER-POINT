@@ -210,7 +210,7 @@ namespace CenterPoint
         async System.Threading.Tasks.Task DownloadAndInstall(string exeUrl, string version, string htmlUrl, string sha256Url = "")
         {
             string exePath;
-            try { exePath = Process.GetCurrentProcess().MainModule.FileName; }
+            try { exePath = Environment.ProcessPath; }
             catch { exePath = Application.ExecutablePath; }
 
             // يعمل فقط على ملف exe (النشر single-file). في وضع التطوير نفتح الصفحة بدل ذلك.
