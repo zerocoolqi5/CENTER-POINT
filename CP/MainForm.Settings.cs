@@ -65,7 +65,7 @@ namespace CenterPoint
             StLbl("عن البرنامج", 486);
             var about = new Label
             {
-                Text = "CENTER POINT PROFESSIONAL — V12.1.0\r\n" +
+                Text = "CENTER POINT PROFESSIONAL — V13.8.0\r\n" +
                        "سنتر بوينت للاتصالات\r\n" +
                        "واتساب / هاتف:  0782 915 5923\r\n" +
                        "⛔ أدوات تشخيص وإرشاد وإدارة — لا يتجاوز أقفال الحسابات (FRP / iCloud).",

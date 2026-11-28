@@ -520,7 +520,7 @@ namespace CenterPoint
         TextBox repairResult, repMgrResult, repFlResult, repFlPartition, repUnlockResult, repMgrModel;
         string repMgrPath = "", repFlPath = "";
         System.Windows.Forms.Timer monTimer; Button monBtn; Label monStatus; bool monOn; string monLast = "";
-        System.Windows.Forms.Timer perfTimer; string baseTitle = "CENTER POINT TRANSFER V12.1.0 PRO - سنتر بوينت";
+        System.Windows.Forms.Timer perfTimer; string baseTitle = "CENTER POINT TRANSFER V13.8.0 PRO - سنتر بوينت";
 
         // عناصر قسم فحص USB
         Button usbScanBtn, usbToolsBtn, usbSaveBtn;
@@ -641,7 +641,7 @@ namespace CenterPoint
 
         public MainForm()
         {
-            Text = "CENTER POINT TRANSFER V12.1.0 PRO - سنتر بوينت";
+            Text = "CENTER POINT TRANSFER V13.8.0 PRO - سنتر بوينت";
             RightToLeft = RightToLeft.Yes;
             RightToLeftLayout = false;
             ClientSize = new Size(1040, 710);
@@ -847,7 +847,7 @@ namespace CenterPoint
 
             var footer = new Label
             {
-                Text = "CENTER POINT\nV12.1.0 PRO",
+                Text = "CENTER POINT\nV13.8.0 PRO",
                 ForeColor = Color.FromArgb(120, 140, 180), BackColor = SIDE,
                 Location = new Point(10, 610), Size = new Size(160, 40),
                 TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Arial", 8),
@@ -3911,7 +3911,7 @@ namespace CenterPoint
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
                 try
                 {
-                    File.WriteAllText(dlg.FileName, "CENTER POINT TRANSFER V12.1.0 PRO\r\n" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n\r\n" + content, new UTF8Encoding(true));
+                    File.WriteAllText(dlg.FileName, "CENTER POINT TRANSFER V13.8.0 PRO\r\n" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "\r\n\r\n" + content, new UTF8Encoding(true));
                     LogOp("تم حفظ تقرير تشخيص USB");
                     MessageBox.Show("تم حفظ التقرير بنجاح.", "CENTER POINT", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }

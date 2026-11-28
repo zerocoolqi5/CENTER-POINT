@@ -6,7 +6,7 @@
 ; ============================================================
 
 #define AppName "CENTER POINT TRANSFER"
-#define AppVer "12.1.0"
+#define AppVer "13.8.0"
 #define Publisher "سنتر بوينت للاتصالات"
 #define ExeName "CenterPoint-Transfer.exe"
 #define PubDir "bin\Release\net8.0-windows\win-x64\publish"

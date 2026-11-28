@@ -16,10 +16,10 @@ for item in required:
 try:
     tree=ET.parse(ROOT/'CenterPoint.csproj')
     props={e.tag:e.text for e in tree.getroot().iter()}
-    if props.get('Version')!='12.1.0': errors.append('Project Version is not 12.1.0')
+    if props.get('Version')!='13.8.0': errors.append('Project Version is not 13.8.0')
 except Exception as e: errors.append(f'Invalid csproj XML: {e}')
 setup=(ROOT/'CenterPoint_Setup.iss').read_text(encoding='utf-8', errors='replace')
-if '#define AppVer "12.1.0"' not in setup: errors.append('Inno Setup version is not 12.1.0')
+if '#define AppVer "13.8.0"' not in setup: errors.append('Inno Setup version is not 13.8.0')
 adb=(ROOT/'MainForm.Adb.cs').read_text(encoding='utf-8', errors='replace')
 for marker in ['Device GetSingleAndroidTarget()', 'connected.Count > 1', 'Shell.Q(d.Id)', 'Regex.IsMatch(pkg']:
     if marker not in adb: errors.append(f'ADB safety check missing: {marker}')
@@ -34,6 +34,6 @@ if errors:
     print('\n'.join(errors))
     sys.exit(1)
 print(f'PASS: {len(required)} required project assets present')
-print('PASS: project and installer metadata are version 12.1.0')
+print('PASS: project and installer metadata are version 13.8.0')
 print('PASS: ADB mutating actions require one unambiguous target')
 print('LIMIT: static checks only; Windows build and physical-device tests not run')
