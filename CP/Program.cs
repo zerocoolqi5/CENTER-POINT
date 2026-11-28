@@ -2447,6 +2447,10 @@ namespace CenterPoint
                         var st = Devices.Storage(d);
                         list.Add(new { kind = "android", model = model, os = "Android " + ver, battery = bat, storeUsed = (int)Math.Round(st.used), storeTotal = (int)Math.Round(st.tot), storePct = st.pct });
                     }
+                    else if (d.Kind == "mtp")
+                    {
+                        list.Add(new { kind = "mtp", model = d.Model, os = "أندرويد (MTP)", battery = -1, storeUsed = 0, storeTotal = 0, storePct = 0 });
+                    }
                     else
                     {
                         list.Add(new { kind = "ios", model = d.Model, os = "iOS", battery = -1, storeUsed = 0, storeTotal = 0, storePct = 0 });
