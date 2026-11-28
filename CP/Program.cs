@@ -1204,8 +1204,21 @@ namespace CenterPoint
                     }
                     else SetText(lbStoreText, "تعذّر قراءة المساحة");
                 }
+                else if (d.Kind == "mtp")
+                {
+                    // جهاز أندرويد بوضع MTP (نقل ملفات) — ليس آيفون
+                    SetText(lblPhoneName, d.Model);
+                    SetText(lbModel, d.Model);
+                    SetText(lbMan, GuessVendor(d.Model));
+                    SetText(lbAndroid, "أندرويد — وضع MTP (معلومات محدودة)");
+                    SetText(lbCpu, "—"); SetText(lbRam, "—"); SetText(lbBat, "—");
+                    SetText(lbSecurity, "—"); SetText(lbResolution, "—");
+                    SetText(lbSerial, d.Id);
+                    SetText(lbStoreText, "المساحة غير متاحة عبر MTP — فعّل «تصحيح USB» (ADB) لعرض كل التفاصيل والمساحة");
+                }
                 else
                 {
+                    // آيفون / آيباد (iOS)
                     SetText(lblPhoneName, d.Model);
                     SetText(lbModel, d.Model);
                     SetText(lbMan, "Apple");
@@ -1216,6 +1229,25 @@ namespace CenterPoint
                     SetText(lbStoreText, "مساحة الآيفون غير متاحة بهذي النسخة");
                 }
             });
+        }
+
+        // استنتاج الشركة المصنّعة من اسم الموديل (لأجهزة MTP التي لا تعطي الشركة مباشرة)
+        static string GuessVendor(string model)
+        {
+            string m = (model ?? "").ToLowerInvariant();
+            string[] brands = { "samsung", "galaxy", "xiaomi", "redmi", "poco", "infinix", "tecno", "itel",
+                "oppo", "vivo", "realme", "oneplus", "huawei", "honor", "nokia", "motorola", "moto",
+                "google", "pixel", "sony", "lg", "zte", "lenovo", "asus", "nothing" };
+            foreach (var b in brands)
+                if (m.Contains(b))
+                {
+                    if (b == "galaxy") return "Samsung";
+                    if (b == "redmi" || b == "poco") return "Xiaomi";
+                    if (b == "moto") return "Motorola";
+                    if (b == "pixel") return "Google";
+                    return char.ToUpper(b[0]) + b.Substring(1);
+                }
+            return "—";
         }
 
         void SetText(Label l, string t) { if (l.InvokeRequired) l.BeginInvoke(new Action(() => l.Text = t)); else l.Text = t; }
